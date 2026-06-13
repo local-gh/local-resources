@@ -86,10 +86,10 @@ jobs:
         working-directory: docker
         env:
           KUBECONFIG_FILE: ${{ env.KUBECONFIG_FILE }}
-          SSL_ROOT_KEY_PASS: ${{ secrets.PRODUCTION_SSL_ROOT_KEY_PASS }}
+          SSL_ROOT_KEY_PASS: ${{ secrets.SSL_ROOT_KEY_PASS }}
         run: |
           if [[ ! -f ./volumes/ssl/root.pass && -z "${SSL_ROOT_KEY_PASS:-}" ]]; then
-            echo "Missing docker/volumes/ssl/root.pass. Add it to the repo or set PRODUCTION_SSL_ROOT_KEY_PASS (kubectl_apply.sh runs setup_ssl.sh)."
+            echo "Missing docker/volumes/ssl/root.pass. Add it to the repo or set SSL_ROOT_KEY_PASS (kubectl_apply.sh runs setup_ssl.sh)."
             exit 1
           fi
           set -a
