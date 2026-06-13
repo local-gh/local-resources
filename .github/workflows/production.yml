@@ -2,10 +2,8 @@
 #
 # Configure the GitHub Environment "production" (or repo-level secrets/variables):
 #   Secrets:
-#     DIGITALOCEAN_ACCESS_TOKEN — Personal access token with Kubernetes read/write (and any scopes doctl needs).
-#     PRODUCTION_ENV            — Full contents of the repo-root .env for Helm/envsubst and env-secrets.
-#   Variables (recommended; not sensitive):
-#     DIGITALOCEAN_KUBERNETES_CLUSTER_NAME — Cluster name as shown in the DO control panel (or use workflow input).
+#     KUBECONFIG_FILE           — Full kubeconfig content used by kubectl.
+#     SOPS_AGE_KEY              — Private age key used by SOPS to decrypt docker/.env.enc.
 #
 # Optional secret when volumes/ssl/root.pass is missing (kubectl_apply.sh sources setup_ssl.sh):
 #   PRODUCTION_SSL_ROOT_KEY_PASS — sets SSL_ROOT_KEY_PASS for non-interactive setup_ssl.sh in CI.
@@ -15,11 +13,6 @@ name: Production
 
 on:
   workflow_dispatch:
-    inputs:
-      cluster_name:
-        description: 'DigitalOcean Kubernetes cluster name (leave empty to use DIGITALOCEAN_KUBERNETES_CLUSTER_NAME variable)'
-        required: false
-        type: string
 
 permissions:
   contents: read
@@ -47,11 +40,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gettext-base openssl apache2-utils dos2unix util-linux
 
-      - name: Install doctl
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
 
@@ -63,33 +51,36 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      - name: Save DigitalOcean kubeconfig
-        env:
-          CLUSTER_INPUT: ${{ inputs.cluster_name }}
-          CLUSTER_VAR: ${{ vars.DIGITALOCEAN_KUBERNETES_CLUSTER_NAME }}
-        run: |
-          CLUSTER_NAME="${CLUSTER_INPUT}"
-          if [[ -z "${CLUSTER_NAME}" ]]; then
-            CLUSTER_NAME="${CLUSTER_VAR}"
-          fi
-          if [[ -z "${CLUSTER_NAME}" ]]; then
-            echo "Set DIGITALOCEAN_KUBERNETES_CLUSTER_NAME on the production environment (or repo variable), or pass cluster_name when running the workflow."
-            exit 1
-          fi
-          mkdir -p "${HOME}/.kube"
-          # Short-lived credentials; duration must cover the job (timeout 120m).
-          doctl kubernetes cluster kubeconfig save "${CLUSTER_NAME}" --expiry-seconds 7200
-          echo "KUBECONFIG_FILE=${HOME}/.kube/config" >> "${GITHUB_ENV}"
+      - name: Setup SOPS
+        uses: getsops/sops-action@v1
 
-      - name: Write production .env
+      - name: Write kubeconfig
         env:
-          ENV_BODY: ${{ secrets.PRODUCTION_ENV }}
+          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG_FILE }}
         run: |
-          if [[ -z "${ENV_BODY}" ]]; then
-            echo "PRODUCTION_ENV secret is not set."
+          KUBECONFIG_FILE="${RUNNER_TEMP}/kubeconfig"
+          if [[ -z "${KUBECONFIG_CONTENT}" ]]; then
+            echo "KUBECONFIG_FILE secret is not set."
             exit 1
           fi
-          printf '%s\n' "$ENV_BODY" > "${GITHUB_WORKSPACE}/.env"
+          printf '%s\n' "${KUBECONFIG_CONTENT}" > "${KUBECONFIG_FILE}"
+          chmod 600 "${KUBECONFIG_FILE}"
+          echo "KUBECONFIG_FILE=${KUBECONFIG_FILE}" >> "${GITHUB_ENV}"
+
+      - name: Decrypt production .env
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          if [[ -z "${SOPS_AGE_KEY}" ]]; then
+            echo "SOPS_AGE_KEY secret is not set."
+            exit 1
+          fi
+          if [[ ! -f "${GITHUB_WORKSPACE}/docker/.env.enc" ]]; then
+            echo "Missing encrypted env file at docker/.env.enc."
+            exit 1
+          fi
+          sops --decrypt "${GITHUB_WORKSPACE}/docker/.env.enc" > "${GITHUB_WORKSPACE}/docker/.env"
+          cp "${GITHUB_WORKSPACE}/docker/.env" "${GITHUB_WORKSPACE}/.env"
 
       - name: Apply Kubernetes stack
         working-directory: docker
