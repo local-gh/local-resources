@@ -60,7 +60,7 @@ jobs:
           node-version-file: .nvmrc
 
       - name: Setup SOPS
-        uses: getsops/sops-action@v1
+        uses: nhedger/setup-sops@v2
 
       - name: Write kubeconfig
         env:
