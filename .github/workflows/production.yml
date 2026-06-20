@@ -3,7 +3,7 @@
 # Configure the GitHub Environment "production" (or repo-level secrets/variables):
 #   Secrets:
 #     KUBECONFIG_FILE           — Full kubeconfig content used by kubectl.
-#     SOPS_AGE_KEY              — Private age key used by SOPS to decrypt docker/.env.enc.
+#     SOPS_AGE_KEY              — age private key (AGE-SECRET-KEY-1...) matching docker/.env.enc recipient age1f28gvdqfj0x4ssa2dwaj06sc77gqgrh48770jrvp5xvju8jt3a2q9pp7y4
 #
 # Optional secret when volumes/ssl/root.pass is missing (kubectl_apply.sh sources setup_ssl.sh):
 #   PRODUCTION_SSL_ROOT_KEY_PASS — sets SSL_ROOT_KEY_PASS for non-interactive setup_ssl.sh in CI.
@@ -81,6 +81,23 @@ jobs:
             echo "Missing encrypted env file at docker/.env.enc."
             exit 1
           fi
+
+          AGE_KEY_FILE="${RUNNER_TEMP}/age-key.txt"
+          if [[ "${SOPS_AGE_KEY}" == age1* ]]; then
+            echo "SOPS_AGE_KEY looks like a public key (age1...). Store the matching private key that starts with AGE-SECRET-KEY-1."
+            exit 1
+          fi
+          if [[ "${SOPS_AGE_KEY}" != *'AGE-SECRET-KEY-1'* ]]; then
+            echo "SOPS_AGE_KEY must be the full age private key containing AGE-SECRET-KEY-1."
+            exit 1
+          fi
+
+          # Support multiline secrets and single-line secrets with literal \\n sequences.
+          printf '%b' "${SOPS_AGE_KEY}" > "${AGE_KEY_FILE}"
+          chmod 600 "${AGE_KEY_FILE}"
+          export SOPS_AGE_KEY_FILE="${AGE_KEY_FILE}"
+          unset SOPS_AGE_KEY
+
           sops --decrypt --input-type dotenv --output-type dotenv "${GITHUB_WORKSPACE}/docker/.env.enc" > "${GITHUB_WORKSPACE}/docker/.env"
           cp "${GITHUB_WORKSPACE}/docker/.env" "${GITHUB_WORKSPACE}/.env"
 
