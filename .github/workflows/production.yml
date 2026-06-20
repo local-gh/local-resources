@@ -81,7 +81,7 @@ jobs:
             echo "Missing encrypted env file at docker/.env.enc."
             exit 1
           fi
-          sops --decrypt "${GITHUB_WORKSPACE}/docker/.env.enc" > "${GITHUB_WORKSPACE}/docker/.env"
+          sops --decrypt --input-type dotenv --output-type dotenv "${GITHUB_WORKSPACE}/docker/.env.enc" > "${GITHUB_WORKSPACE}/docker/.env"
           cp "${GITHUB_WORKSPACE}/docker/.env" "${GITHUB_WORKSPACE}/.env"
 
       - name: Apply Kubernetes stack
