@@ -3,7 +3,8 @@
 # Configure the GitHub Environment "production" (or repo-level secrets/variables):
 #   Secrets:
 #     KUBECONFIG_FILE           — Full kubeconfig content used by kubectl.
-#     SOPS_AGE_KEY              — age private key (AGE-SECRET-KEY-1...) matching docker/.env.enc recipient age1f28gvdqfj0x4ssa2dwaj06sc77gqgrh48770jrvp5xvju8jt3a2q9pp7y4
+#     SOPS_AGE_KEY              — age private key file contents (AGE-SECRET-KEY-1...) or base64 of that file
+#                               Must match recipient age1f28gvdqfj0x4ssa2dwaj06sc77gqgrh48770jrvp5xvju8jt3a2q9pp7y4
 #
 # Optional secret when volumes/ssl/root.pass is missing (kubectl_apply.sh sources setup_ssl.sh):
 #   PRODUCTION_SSL_ROOT_KEY_PASS — sets SSL_ROOT_KEY_PASS for non-interactive setup_ssl.sh in CI.
@@ -83,17 +84,32 @@ jobs:
           fi
 
           AGE_KEY_FILE="${RUNNER_TEMP}/age-key.txt"
+          SOPS_AGE_KEY="$(printf '%s' "${SOPS_AGE_KEY}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+
+          write_age_key_file() {
+            printf '%b' "$1" > "${AGE_KEY_FILE}"
+          }
+
           if [[ "${SOPS_AGE_KEY}" == age1* ]]; then
-            echo "SOPS_AGE_KEY looks like a public key (age1...). Store the matching private key that starts with AGE-SECRET-KEY-1."
-            exit 1
-          fi
-          if [[ "${SOPS_AGE_KEY}" != *'AGE-SECRET-KEY-1'* ]]; then
-            echo "SOPS_AGE_KEY must be the full age private key containing AGE-SECRET-KEY-1."
+            echo "SOPS_AGE_KEY looks like a public key (age1...). Store the private key file that contains AGE-SECRET-KEY-1."
             exit 1
           fi
 
-          # Support multiline secrets and single-line secrets with literal \\n sequences.
-          printf '%b' "${SOPS_AGE_KEY}" > "${AGE_KEY_FILE}"
+          if [[ "${SOPS_AGE_KEY}" == *'AGE-SECRET-KEY-1'* ]]; then
+            write_age_key_file "${SOPS_AGE_KEY}"
+          elif decoded_key="$(printf '%s' "${SOPS_AGE_KEY}" | base64 -d 2>/dev/null)" && [[ "${decoded_key}" == *'AGE-SECRET-KEY-1'* ]]; then
+            write_age_key_file "${decoded_key}"
+          elif [[ "${SOPS_AGE_KEY}" =~ ^[A-Za-z0-9+/=_-]+$ ]] && [[ ${#SOPS_AGE_KEY} -ge 43 ]]; then
+            write_age_key_file "AGE-SECRET-KEY-1${SOPS_AGE_KEY}"
+          else
+            echo "SOPS_AGE_KEY is not a recognized age private key."
+            echo "Set it to either:"
+            echo "  1. The full contents of your age keys file (includes a line starting with AGE-SECRET-KEY-1), or"
+            echo "  2. base64 of that file: base64 -w0 ~/.config/sops/age/keys.txt"
+            echo "Expected public key: age1f28gvdqfj0x4ssa2dwaj06sc77gqgrh48770jrvp5xvju8jt3a2q9pp7y4"
+            exit 1
+          fi
+
           chmod 600 "${AGE_KEY_FILE}"
           export SOPS_AGE_KEY_FILE="${AGE_KEY_FILE}"
           unset SOPS_AGE_KEY
