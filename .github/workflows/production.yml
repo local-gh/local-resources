@@ -48,19 +48,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gettext-base openssl apache2-utils dos2unix util-linux
 
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v4
+          SOPS_VERSION="3.13.1"
+          curl -fsSL "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64" -o /tmp/sops
+          sudo install -m 0755 /tmp/sops /usr/local/bin/sops
 
-      - name: Setup Helm
-        uses: azure/setup-helm@v4
+          curl -fsSL "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o /tmp/kubectl
+          sudo install -m 0755 /tmp/kubectl /usr/local/bin/kubectl
 
-      - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version-file: .nvmrc
-
-      - name: Setup SOPS
-        uses: nhedger/setup-sops@v2
+          curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
       - name: Write kubeconfig
         env:
