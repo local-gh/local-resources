@@ -85,6 +85,7 @@ jobs:
 
           sops --decrypt --input-type dotenv --output-type dotenv "${GITHUB_WORKSPACE}/docker/.env.enc" > "${GITHUB_WORKSPACE}/docker/.env"
           cp "${GITHUB_WORKSPACE}/docker/.env" "${GITHUB_WORKSPACE}/.env"
+          dos2unix "${GITHUB_WORKSPACE}/docker/.env" "${GITHUB_WORKSPACE}/.env" >/dev/null 2>&1
 
       - name: Apply Kubernetes stack
         working-directory: docker
@@ -96,8 +97,5 @@ jobs:
             echo "Missing docker/volumes/ssl/root.pass. Add it to the repo or set SSL_ROOT_KEY_PASS (kubectl_apply.sh runs setup_ssl.sh)."
             exit 1
           fi
-          set -a
-          source "${GITHUB_WORKSPACE}/docker/.env"
-          set +a
           # Pseudo-TTY so kubectl exec -it in kubectl_setup_core.sh works non-interactively.
           script -q -e -c "bash kubectl_apply.sh -c \"${KUBECONFIG_FILE}\""
