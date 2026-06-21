@@ -97,7 +97,7 @@ jobs:
             exit 1
           fi
           set -a
-          source "${GITHUB_WORKSPACE}/.env"
+          source "${GITHUB_WORKSPACE}/docker/.env"
           set +a
           # Pseudo-TTY so kubectl exec -it in kubectl_setup_core.sh works non-interactively.
           script -q -e -c "bash kubectl_apply.sh -c \"${KUBECONFIG_FILE}\""
