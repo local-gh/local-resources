@@ -7,7 +7,7 @@ else
     source ./kubectl_setup_env.sh
 fi
 
-helm template "$PROJECT_NAME" "." | kubectl delete -f -
+helm template "$PROJECT_NAME" "./kubernetes" | kubectl delete -f -
 
 kubectl --kubeconfig="$KUBECONFIG_PATH" delete deployments --all --all-namespaces
 kubectl --kubeconfig="$KUBECONFIG_PATH" delete pods --all --all-namespaces
