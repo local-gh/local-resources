@@ -7,9 +7,11 @@
 #                               Must match recipient age1f28gvdqfj0x4ssa2dwaj06sc77gqgrh48770jrvp5xvju8jt3a2q9pp7y4
 #
 # Optional secret when volumes/ssl/root.pass is missing (kubectl_apply.sh sources setup_ssl.sh):
-#   PRODUCTION_SSL_ROOT_KEY_PASS — sets SSL_ROOT_KEY_PASS for non-interactive setup_ssl.sh in CI.
+#   SSL_ROOT_KEY_PASS — sets SSL_ROOT_KEY_PASS for non-interactive setup_ssl.sh in CI.
 #
-# The apply scripts also expect nginx basic auth under docker/volumes/nginx/ (see docker/.gitignore).
+# Nginx basic auth (docker/volumes/nginx/.htpasswd is gitignored; created in CI before apply):
+#   NGINX_BASIC_AUTH_USER
+#   NGINX_BASIC_AUTH_PASSWORD
 name: Production
 
 on:
@@ -86,6 +88,19 @@ jobs:
           sops --decrypt --input-type dotenv --output-type dotenv "${GITHUB_WORKSPACE}/docker/.env.enc" > "${GITHUB_WORKSPACE}/docker/.env"
           cp "${GITHUB_WORKSPACE}/docker/.env" "${GITHUB_WORKSPACE}/.env"
           dos2unix "${GITHUB_WORKSPACE}/docker/.env" "${GITHUB_WORKSPACE}/.env" >/dev/null 2>&1
+
+      - name: Create nginx basic auth
+        working-directory: docker
+        env:
+          NGINX_BASIC_AUTH_USER: ${{ secrets.NGINX_BASIC_AUTH_USER }}
+          NGINX_BASIC_AUTH_PASSWORD: ${{ secrets.NGINX_BASIC_AUTH_PASSWORD }}
+        run: |
+          if [[ -z "${NGINX_BASIC_AUTH_USER}" || -z "${NGINX_BASIC_AUTH_PASSWORD}" ]]; then
+            echo "NGINX_BASIC_AUTH_USER and NGINX_BASIC_AUTH_PASSWORD secrets are not set."
+            exit 1
+          fi
+          mkdir -p ./volumes/nginx
+          htpasswd -cb ./volumes/nginx/.htpasswd "${NGINX_BASIC_AUTH_USER}" "${NGINX_BASIC_AUTH_PASSWORD}"
 
       - name: Apply Kubernetes stack
         working-directory: docker
