@@ -21,6 +21,11 @@ on:
         description: 'Branch, tag, or commit SHA to deploy (defaults to the branch selected when running the workflow)'
         required: false
         type: string
+      restart_deployments:
+        description: 'Restart deployments after apply so pods pick up new env-secrets'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -114,3 +119,11 @@ jobs:
           fi
           # Pseudo-TTY so kubectl exec -it in kubectl_setup_core.sh works non-interactively.
           script -q -e -c "bash kubectl_apply.sh -c \"${KUBECONFIG_FILE}\""
+
+      - name: Restart deployments
+        if: inputs.restart_deployments
+        working-directory: docker
+        env:
+          KUBECONFIG_FILE: ${{ env.KUBECONFIG_FILE }}
+        run: |
+          bash kubectl_restart.sh -c "${KUBECONFIG_FILE}"

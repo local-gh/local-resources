@@ -1,11 +1,26 @@
 source ./kubectl_setup_args.sh
 
-if [ -n "$ENV_FILE" ]; then
-    echo "Skipping env restart setup"
-else
-    ENV_FILE=".env"
-    source ./kubectl_setup_env.sh
+ENV_FILE="${ENV_FILE:-.env}"
+if [ ! -f "$ENV_FILE" ] && [ -f "../.env" ]; then
+    ENV_FILE="../.env"
 fi
+if [ ! -f "$ENV_FILE" ]; then
+    echo "Error: .env file not found"
+    exit 1
+fi
+while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%$'\r'}"
+    case "$line" in
+        ''|\#*) continue ;;
+    esac
+    key="${line%%=*}"
+    value="${line#*=}"
+    case "$value" in
+        \"*\") value="${value#\"}"; value="${value%\"}" ;;
+        \'*\') value="${value#\'}"; value="${value%\'}" ;;
+    esac
+    export "$key=$value"
+done < "$ENV_FILE"
 
 IFS=' ' read -ra STACK_ARRAY <<< "$STACKS"
 
@@ -85,9 +100,12 @@ fi
 
 DASHBOARD_DEPLOYMENT_NAME=$(kubectl --kubeconfig="$KUBECONFIG_PATH" get deployments --no-headers=true | grep "^dashboard" | awk '{print $1}' | head -n 1)
 kubectl --kubeconfig="$KUBECONFIG_PATH" rollout restart deployment $DASHBOARD_DEPLOYMENT_NAME -n kubernetes-dashboard
-kubectl --kubeconfig="$KUBECONFIG_PATH" proxy &
 
-echo 'Dashboard token:'
-kubectl --kubeconfig="$KUBECONFIG_PATH" get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d
+if [ -z "${SKIP_DASHBOARD_PROXY:-}" ] && [ -z "${CI:-}" ]; then
+    kubectl --kubeconfig="$KUBECONFIG_PATH" proxy &
+
+    echo 'Dashboard token:'
+    kubectl --kubeconfig="$KUBECONFIG_PATH" get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d
+fi
 
 exit 0
