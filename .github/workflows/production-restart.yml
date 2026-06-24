@@ -1,0 +1,79 @@
+# Restarts Kubernetes deployments so running pods pick up updated env-secrets.
+# Use after changing docker/.env.enc when a full deploy is not needed.
+#
+# Requires the same secrets as the Production workflow:
+#   KUBECONFIG_FILE, SOPS_AGE_KEY
+name: Production Restart
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-kubernetes
+  cancel-in-progress: false
+
+jobs:
+  restart-deployments:
+    name: Restart deployments (DigitalOcean)
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install kubectl
+        run: |
+          curl -fsSL "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o /tmp/kubectl
+          sudo install -m 0755 /tmp/kubectl /usr/local/bin/kubectl
+
+          SOPS_VERSION="3.13.1"
+          curl -fsSL "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64" -o /tmp/sops
+          sudo install -m 0755 /tmp/sops /usr/local/bin/sops
+
+      - name: Write kubeconfig
+        env:
+          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG_FILE }}
+        run: |
+          KUBECONFIG_FILE="${RUNNER_TEMP}/kubeconfig"
+          if [[ -z "${KUBECONFIG_CONTENT}" ]]; then
+            echo "KUBECONFIG_FILE secret is not set."
+            exit 1
+          fi
+          printf '%s\n' "${KUBECONFIG_CONTENT}" > "${KUBECONFIG_FILE}"
+          chmod 600 "${KUBECONFIG_FILE}"
+          echo "KUBECONFIG_FILE=${KUBECONFIG_FILE}" >> "${GITHUB_ENV}"
+
+      - name: Decrypt production .env
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          if [[ -z "${SOPS_AGE_KEY}" ]]; then
+            echo "SOPS_AGE_KEY secret is not set."
+            exit 1
+          fi
+          sops --decrypt --input-type dotenv --output-type dotenv "${GITHUB_WORKSPACE}/docker/.env.enc" > "${GITHUB_WORKSPACE}/docker/.env"
+          cp "${GITHUB_WORKSPACE}/docker/.env" "${GITHUB_WORKSPACE}/.env"
+          dos2unix "${GITHUB_WORKSPACE}/docker/.env" "${GITHUB_WORKSPACE}/.env" >/dev/null 2>&1
+
+      - name: Recreate env-secrets
+        working-directory: docker
+        env:
+          KUBECONFIG_FILE: ${{ env.KUBECONFIG_FILE }}
+        run: |
+          kubectl --kubeconfig="${KUBECONFIG_FILE}" delete secret env-secrets --ignore-not-found
+          kubectl --kubeconfig="${KUBECONFIG_FILE}" create secret generic env-secrets --from-env-file=../.env
+
+      - name: Restart deployments
+        working-directory: docker
+        env:
+          KUBECONFIG_FILE: ${{ env.KUBECONFIG_FILE }}
+        run: |
+          bash kubectl_restart.sh -c "${KUBECONFIG_FILE}"
