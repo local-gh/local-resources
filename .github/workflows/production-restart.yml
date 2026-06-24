@@ -53,31 +53,7 @@ jobs:
           printf '%s\n' "${KUBECONFIG_CONTENT}" > "${KUBECONFIG_FILE}"
           chmod 600 "${KUBECONFIG_FILE}"
           echo "KUBECONFIG_FILE=${KUBECONFIG_FILE}" >> "${GITHUB_ENV}"
-
-      - name: Decrypt production .env
-        env:
-          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
-        run: |
-          if [[ -z "${SOPS_AGE_KEY}" ]]; then
-            echo "SOPS_AGE_KEY secret is not set."
-            exit 1
-          fi
-          if [[ ! -f "${GITHUB_WORKSPACE}/docker/.env.enc" ]]; then
-            echo "Missing encrypted env file at docker/.env.enc."
-            exit 1
-          fi
-          sops --decrypt --input-type dotenv --output-type dotenv "${GITHUB_WORKSPACE}/docker/.env.enc" > "${GITHUB_WORKSPACE}/docker/.env"
-          cp "${GITHUB_WORKSPACE}/docker/.env" "${GITHUB_WORKSPACE}/.env"
-          dos2unix "${GITHUB_WORKSPACE}/docker/.env" "${GITHUB_WORKSPACE}/.env" >/dev/null 2>&1
-
-      - name: Recreate env-secrets
-        working-directory: docker
-        env:
-          KUBECONFIG_FILE: ${{ env.KUBECONFIG_FILE }}
-        run: |
-          kubectl --kubeconfig="${KUBECONFIG_FILE}" delete secret env-secrets --ignore-not-found
-          kubectl --kubeconfig="${KUBECONFIG_FILE}" create secret generic env-secrets --from-env-file=../.env
-
+          
       - name: Restart deployments
         working-directory: docker
         env:
