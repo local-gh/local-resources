@@ -53,17 +53,14 @@ spec:
               value: '4000'
             - name: DB_PORT
               value: "5432"
+            - name: LOGFLARE_NODE_HOST
+              value: analytics
             - name: HOST
               valueFrom:
                 secretKeyRef:
                   name: env-secrets
                   key: NGINX_LOGFLARE_HOST_URL
             - name: PHX_URL_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: env-secrets
-                  key: NGINX_LOGFLARE_HOST_URL
-            - name: LOGFLARE_NODE_HOST
               valueFrom:
                 secretKeyRef:
                   name: env-secrets
