@@ -26,6 +26,8 @@ core:
     replicas: $CORE_ANALYTICS_REPLICAS
     memoryRequest: $CORE_ANALYTICS_MEMORY_REQUEST
     memoryLimit: $CORE_ANALYTICS_MEMORY_LIMIT
+    erlAflags: $CORE_ANALYTICS_ERL_AFLAGS
+    logflareHost: $NGINX_LOGFLARE_HOST_URL
   auth:
     replicas: $CORE_AUTH_REPLICAS
   db:

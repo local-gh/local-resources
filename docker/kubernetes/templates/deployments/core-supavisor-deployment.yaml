@@ -35,7 +35,9 @@ spec:
             done
             ls /tmp/etc/pooler
             until curl -fsSL -m 2 db:5432 > /dev/null 2>&1 || [ $? -eq 52 ]; do echo waiting for postgres; sleep 2; done;
+            {{- if gt (int .Values.core.analytics.replicas) 0 }}
             until curl -fsSL -m 2 analytics:4000; do echo waiting for analytics; sleep 2; done;
+            {{- end }}
         volumeMounts:
           - name: supavisor-volume
             mountPath: /tmp/etc/pooler
@@ -114,7 +116,12 @@ spec:
           livenessProbe:
             exec:
               command:
-                - curl -sSfL --head -o /dev/null "http://analytics:4000/api/health"
+                - curl
+                - -sSfL
+                - --head
+                - -o
+                - /dev/null
+                - http://127.0.0.1:4000/api/health
             failureThreshold: 10
             periodSeconds: 10
             timeoutSeconds: 5

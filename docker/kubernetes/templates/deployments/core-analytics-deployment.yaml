@@ -22,12 +22,15 @@ spec:
       labels:
         service: analytics
     spec:
+      hostAliases:
+        - ip: 127.0.0.1
+          hostnames:
+            - {{ .Values.core.analytics.logflareHost | quote }}
       initContainers:
         - name: init-analytics
-          image: supabase/logflare:1.26.13
-          imagePullPolicy: Always
+          image: curlimages/curl
           command:
-            - sh 
+            - sh
             - -c
             - |
               until curl -fsSL -m 2 db:5432 > /dev/null 2>&1 || [ $? -eq 52 ]; do echo waiting for postgres; sleep 2; done;
@@ -39,6 +42,8 @@ spec:
               value: _analytics
             - name: DB_USERNAME
               value: supabase_admin
+            - name: ERL_AFLAGS
+              value: {{ .Values.core.analytics.erlAflags | quote }}
             - name: LOGFLARE_FEATURE_FLAG_OVERRIDE
               value: multibackend=true
             - name: LOGFLARE_MIN_CLUSTER_SIZE
@@ -54,7 +59,7 @@ spec:
             - name: DB_PORT
               value: "5432"
             - name: LOGFLARE_NODE_HOST
-              value: analytics
+              value: "127.0.0.1"
             - name: HOST
               valueFrom:
                 secretKeyRef:
@@ -94,26 +99,23 @@ spec:
             limits:
               memory: {{ .Values.core.analytics.memoryLimit }}
           startupProbe:
-            exec:
-              command:
-                - curl
-                - http://analytics:4000/health
-            failureThreshold: 30
+            httpGet:
+              path: /health
+              port: 4000
+            failureThreshold: 60
             periodSeconds: 5
             timeoutSeconds: 5
           readinessProbe:
-            exec:
-              command:
-                - curl
-                - http://analytics:4000/health
+            httpGet:
+              path: /health
+              port: 4000
             failureThreshold: 3
             periodSeconds: 5
             timeoutSeconds: 5
           livenessProbe:
-            exec:
-              command:
-                - curl
-                - http://analytics:4000/health
+            httpGet:
+              path: /health
+              port: 4000
             failureThreshold: 10
             periodSeconds: 5
             timeoutSeconds: 5
