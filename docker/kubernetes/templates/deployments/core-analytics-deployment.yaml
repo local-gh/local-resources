@@ -100,7 +100,7 @@ spec:
             exec:
               command:
                 - curl
-                - http://localhost:4000/health
+                - http://analytics:4000/health
             failureThreshold: 30
             periodSeconds: 5
             timeoutSeconds: 5
@@ -108,7 +108,7 @@ spec:
             exec:
               command:
                 - curl
-                - http://localhost:4000/health
+                - http://analytics:4000/health
             failureThreshold: 3
             periodSeconds: 5
             timeoutSeconds: 5
@@ -116,7 +116,7 @@ spec:
             exec:
               command:
                 - curl
-                - http://localhost:4000/health
+                - http://analytics:4000/health
             failureThreshold: 10
             periodSeconds: 5
             timeoutSeconds: 5
