@@ -24,6 +24,8 @@ blog:
 core:
   analytics:
     replicas: $CORE_ANALYTICS_REPLICAS
+    memoryRequest: $CORE_ANALYTICS_MEMORY_REQUEST
+    memoryLimit: $CORE_ANALYTICS_MEMORY_LIMIT
   auth:
     replicas: $CORE_AUTH_REPLICAS
   db:

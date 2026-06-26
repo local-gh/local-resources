@@ -91,11 +91,32 @@ spec:
                   name: env-secrets
                   key: ANALYTICS_POSTGRES_BACKEND_URL
           image: supabase/logflare:1.26.13
+          resources:
+            requests:
+              memory: {{ .Values.core.analytics.memoryRequest }}
+            limits:
+              memory: {{ .Values.core.analytics.memoryLimit }}
+          startupProbe:
+            exec:
+              command:
+                - curl
+                - http://localhost:4000/health
+            failureThreshold: 30
+            periodSeconds: 5
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - curl
+                - http://localhost:4000/health
+            failureThreshold: 3
+            periodSeconds: 5
+            timeoutSeconds: 5
           livenessProbe:
             exec:
               command:
                 - curl
-                - http://analytics:4000/health
+                - http://localhost:4000/health
             failureThreshold: 10
             periodSeconds: 5
             timeoutSeconds: 5
