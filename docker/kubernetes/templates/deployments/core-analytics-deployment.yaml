@@ -60,11 +60,6 @@ spec:
               value: "5432"
             - name: LOGFLARE_NODE_HOST
               value: "127.0.0.1"
-            - name: HOST
-              valueFrom:
-                secretKeyRef:
-                  name: env-secrets
-                  key: NGINX_LOGFLARE_HOST_URL
             - name: PHX_URL_HOST
               valueFrom:
                 secretKeyRef:
@@ -99,35 +94,24 @@ spec:
             limits:
               memory: {{ .Values.core.analytics.memoryLimit }}
           startupProbe:
-            exec:
-              command:
-                - curl
-                - -sfSL
-                - -m
-                - "4"
-                - http://127.0.0.1:4000/health
+            tcpSocket:
+              port: 4000
             failureThreshold: 60
             periodSeconds: 5
             timeoutSeconds: 5
           readinessProbe:
-            exec:
-              command:
-                - curl
-                - -sfSL
-                - -m
-                - "4"
-                - http://127.0.0.1:4000/health
+            httpGet:
+              path: /health
+              port: 4000
+              host: 127.0.0.1
             failureThreshold: 3
             periodSeconds: 5
             timeoutSeconds: 5
           livenessProbe:
-            exec:
-              command:
-                - curl
-                - -sfSL
-                - -m
-                - "4"
-                - http://127.0.0.1:4000/health
+            httpGet:
+              path: /health
+              port: 4000
+              host: 127.0.0.1
             failureThreshold: 10
             periodSeconds: 5
             timeoutSeconds: 5
