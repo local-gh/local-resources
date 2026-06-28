@@ -50,15 +50,18 @@ spec:
           args:
             - --config
             - /etc/vector/vector.yml
-          livenessProbe:
-            exec:
-              command:
-                - wget
-                - --no-verbose
-                - --tries=1
-                - --spider
-                - http://vector:9001/health
-            failureThreshold: 10
+          startupProbe:
+            tcpSocket:
+              port: 9001
+            initialDelaySeconds: 10
+            failureThreshold: 30
+            periodSeconds: 5
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 9001
+            failureThreshold: 3
             periodSeconds: 5
             timeoutSeconds: 5
           name: supabase-vector
