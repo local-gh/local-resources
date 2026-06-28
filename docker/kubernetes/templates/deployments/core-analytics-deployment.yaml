@@ -28,12 +28,12 @@ spec:
             - {{ .Values.core.analytics.logflareHost | quote }}
       initContainers:
         - name: init-analytics
-          image: curlimages/curl
+          image: supabase/postgres:15.8.1.085
           command:
             - sh
             - -c
             - |
-              until curl -fsSL -m 2 db:5432 > /dev/null 2>&1 || [ $? -eq 52 ]; do echo waiting for postgres; sleep 2; done;
+              until pg_isready -h db -p 5432 -U postgres; do echo waiting for postgres; sleep 2; done
       containers:
         - env:
             - name: DB_DATABASE
@@ -56,8 +56,6 @@ spec:
               value: _analytics
             - name: PORT
               value: '4000'
-            - name: PHX_HTTP_IP
-              value: "0.0.0.0"
             - name: DB_PORT
               value: "5432"
             - name: LOGFLARE_NODE_HOST
@@ -98,7 +96,7 @@ spec:
           startupProbe:
             tcpSocket:
               port: 4000
-              host: 127.0.0.1
+            initialDelaySeconds: 15
             failureThreshold: 60
             periodSeconds: 5
             timeoutSeconds: 5
@@ -106,15 +104,14 @@ spec:
             httpGet:
               path: /health
               port: 4000
-            failureThreshold: 3
+            failureThreshold: 12
             periodSeconds: 5
             timeoutSeconds: 5
           livenessProbe:
-            httpGet:
-              path: /health
+            tcpSocket:
               port: 4000
             failureThreshold: 10
-            periodSeconds: 5
+            periodSeconds: 10
             timeoutSeconds: 5
           name: supabase-analytics
           imagePullPolicy: Always
