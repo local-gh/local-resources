@@ -99,23 +99,35 @@ spec:
             limits:
               memory: {{ .Values.core.analytics.memoryLimit }}
           startupProbe:
-            httpGet:
-              path: /health
-              port: 4000
+            exec:
+              command:
+                - curl
+                - -sfSL
+                - -m
+                - "4"
+                - http://127.0.0.1:4000/health
             failureThreshold: 60
             periodSeconds: 5
             timeoutSeconds: 5
           readinessProbe:
-            httpGet:
-              path: /health
-              port: 4000
+            exec:
+              command:
+                - curl
+                - -sfSL
+                - -m
+                - "4"
+                - http://127.0.0.1:4000/health
             failureThreshold: 3
             periodSeconds: 5
             timeoutSeconds: 5
           livenessProbe:
-            httpGet:
-              path: /health
-              port: 4000
+            exec:
+              command:
+                - curl
+                - -sfSL
+                - -m
+                - "4"
+                - http://127.0.0.1:4000/health
             failureThreshold: 10
             periodSeconds: 5
             timeoutSeconds: 5
