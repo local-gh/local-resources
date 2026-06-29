@@ -91,15 +91,20 @@ spec:
               memory: {{ .Values.core.analytics.memoryLimit }}
           startupProbe:
             tcpSocket:
-              port: 4000
+              port: 30012
             initialDelaySeconds: 30
             failureThreshold: 90
             periodSeconds: 5
             timeoutSeconds: 5
           readinessProbe:
-            httpGet:
-              path: /health
-              port: 4000
+            exec:
+              command:
+                - curl
+                - -sSfL
+                - --head
+                - -o
+                - /dev/null
+                - http://127.0.0.1:30012/api/health
             failureThreshold: 60
             periodSeconds: 5
             timeoutSeconds: 5
