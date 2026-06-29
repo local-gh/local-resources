@@ -1,0 +1,66 @@
+# Decrypts docker/.env.enc and prints the contents to the job log so you can copy a local .env.
+#
+# Requires GitHub Environment "production" (or repo secrets):
+#   SOPS_AGE_KEY — age private key matching the recipient in docker/.env.enc
+#
+# Security: decrypted values appear in workflow logs. Only run when you need a local copy,
+# and restrict who can use the production environment.
+name: Decrypt .env
+
+on:
+  workflow_dispatch:
+    inputs:
+      git_ref:
+        description: 'Branch, tag, or commit SHA containing docker/.env.enc (defaults to default branch)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  decrypt-env:
+    name: Decrypt and print .env
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.git_ref || github.ref }}
+
+      - name: Install sops
+        run: |
+          SOPS_VERSION="3.13.1"
+          curl -fsSL "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64" -o /tmp/sops
+          sudo install -m 0755 /tmp/sops /usr/local/bin/sops
+
+      - name: Decrypt docker/.env.enc
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          if [[ -z "${SOPS_AGE_KEY}" ]]; then
+            echo "SOPS_AGE_KEY secret is not set."
+            exit 1
+          fi
+          if [[ ! -f "${GITHUB_WORKSPACE}/docker/.env.enc" ]]; then
+            echo "Missing encrypted env file at docker/.env.enc."
+            exit 1
+          fi
+
+          sops --decrypt --input-type dotenv --output-type dotenv \
+            "${GITHUB_WORKSPACE}/docker/.env.enc" > "${GITHUB_WORKSPACE}/docker/.env"
+
+      - name: Print .env for copy
+        run: |
+          echo ""
+          echo "========== BEGIN docker/.env — copy lines below until END marker =========="
+          cat "${GITHUB_WORKSPACE}/docker/.env"
+          echo "========== END docker/.env =========="
+          echo ""
+          echo "Paste into docker/.env locally, then update values (e.g. CORE_ANALYTICS_MEMORY_LIMIT) as needed."

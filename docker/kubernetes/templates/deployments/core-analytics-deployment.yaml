@@ -42,6 +42,8 @@ spec:
               value: _analytics
             - name: DB_USERNAME
               value: supabase_admin
+            - name: ERL_AFLAGS
+              value: {{ .Values.core.analytics.erlAflags | quote }}
             - name: LOGFLARE_FEATURE_FLAG_OVERRIDE
               value: multibackend=true
             - name: LOGFLARE_MIN_CLUSTER_SIZE
