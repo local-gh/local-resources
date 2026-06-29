@@ -8,12 +8,10 @@ metadata:
     service: analytics
   name: analytics
 spec:
-  type: NodePort
+  type: ClusterIP
   ports:
     - name: "4000"
-      nodePort: 30012
       port: 4000
       targetPort: 4000
-      protocol: TCP
   selector:
     service: analytics
