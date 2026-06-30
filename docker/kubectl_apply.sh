@@ -73,11 +73,11 @@ source ./kubectl_setup_templates.sh
 source ./kubectl_apply_adminusers.sh
 source ./kubectl_apply_clusterroles.sh
 source ./kubectl_apply_daemonsets.sh
-source ./kubectl_apply_deployments.sh
-source ./kubectl_apply_networkpolicies.sh
+source ./kubectl_apply_secrets.sh
 source ./kubectl_apply_persistentvolumeclaims.sh
 source ./kubectl_apply_runtimeclasses.sh
-source ./kubectl_apply_secrets.sh
+source ./kubectl_apply_deployments.sh
+source ./kubectl_apply_networkpolicies.sh
 source ./kubectl_apply_services.sh
 
 source ./setup_kong.sh
