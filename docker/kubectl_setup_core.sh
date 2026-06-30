@@ -47,30 +47,8 @@ if [[ "${STACK_ARRAY[@]}" =~ "core" ]]; then
     if [[ -z "$KONG_POD_NAME" ]]; then
         echo "No pod found with label service=kong"
     else
-        start_time=$(date +%s)
-        while true; do
-            # Check if the pod is running
-            status=$(kubectl --kubeconfig="$KUBECONFIG_PATH" get pod $KONG_POD_NAME -n $NAMESPACE -o jsonpath='{.status.initContainerStatuses[*].state}')
-            status_key=$(echo "$status" | sed 's/^{"\([^"]*\)":.*/\1/')
-            if [ "$status_key" = "running" ]; then
-                echo "Pod $KONG_POD_NAME is running"
-                break
-            else
-                current_time=$(date +%s)
-                elapsed_time=$((current_time - start_time))
-                
-                if [ $elapsed_time -ge $TIMEOUT ]; then
-                    echo "Timeout: Pod $KONG_POD_NAME did not run within $TIMEOUT seconds"
-                    break
-                fi
-                
-                echo "Waiting for pod $KONG_POD_NAME to be running..."
-                sleep 5 # Wait for 5 seconds before checking again
-            fi
-        done
-
-        # Copy files to kong service
-        kubectl --kubeconfig="$KUBECONFIG_PATH" cp ./volumes/api/kong.yml $KONG_POD_NAME:/tmp/home/kong/temp.yml -c init-kong
+        source ./kubectl_setup_kong.sh
+        kubectl_setup_kong
     fi
 
     SUPAVISOR_POD_NAME=$(kubectl --kubeconfig="$KUBECONFIG_PATH" get pods --no-headers=true | grep "^supavisor.*Init" | awk '{print $1}' | head -n 1)

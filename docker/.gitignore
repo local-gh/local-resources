@@ -11,6 +11,7 @@ volumes/ssl/*.key
 volumes/ssl/*.pass
 volumes/ssl/*.srl
 .env
+volumes/api/kong.yml
 test.http
 docker-compose.override.yml
 values-substituded.yaml

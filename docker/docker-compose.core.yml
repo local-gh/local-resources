@@ -58,7 +58,7 @@ services:
     image: kong:2.8.1
     restart: unless-stopped
     # https://unix.stackexchange.com/a/294837
-    entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+    entrypoint: /docker-entrypoint.sh kong docker-start
     ports:
       - 127.0.0.1:8000:8000/tcp
       - 127.0.0.1:8443:8443/tcp
@@ -78,7 +78,7 @@ services:
       DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
     volumes:
       # https://github.com/supabase/supabase/issues/12661
-      - ./volumes/api/kong.yml:/home/kong/temp.yml:ro,z
+      - ./volumes/api/kong.yml:/home/kong/kong.yml:ro,z
 
   auth:
     container_name: supabase-auth

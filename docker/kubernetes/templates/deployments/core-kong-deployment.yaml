@@ -32,8 +32,9 @@ spec:
           - -c
           - |
             chown -R kong:kong /tmp/home/kong && chmod -R 755 /tmp/home/kong
-            while [ ! -e /tmp/home/kong/temp.yml ] || [ ! -s /tmp/home/kong/temp.yml ]; do 
-              echo 'Waiting for all copied files...'
+            rm -f /tmp/home/kong/kong.yml
+            while [ ! -e /tmp/home/kong/kong.yml ] || [ ! -s /tmp/home/kong/kong.yml ]; do
+              echo 'Waiting for Kong config...'
               sleep 10
             done
             ls /tmp/home/kong/
@@ -42,9 +43,9 @@ spec:
             mountPath: /tmp/home/kong
       containers:
         - command:
-            - bash
-            - -c
-            - eval "echo \"$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start
+            - /docker-entrypoint.sh
+            - kong
+            - docker-start
           env:
             - name: KONG_DATABASE
               value: "off"

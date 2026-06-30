@@ -26,6 +26,8 @@ source ./kubectl_replicas_helpers.sh
 
 IFS=' ' read -ra STACK_ARRAY <<< "$STACKS"
 
+source ./setup_kong.sh
+
 NGINX_DEPLOYMENT_NAME=$(kubectl --kubeconfig="$KUBECONFIG_PATH" get deployments --no-headers=true | grep "^nginx" | awk '{print $1}' | head -n 1)
 kubectl --kubeconfig="$KUBECONFIG_PATH" rollout restart deployment $NGINX_DEPLOYMENT_NAME
 
@@ -35,6 +37,10 @@ if [[ "${STACK_ARRAY[@]}" =~ "core" ]]; then
     restart_deployment_if_replicas "${CORE_DB_REPLICAS:-0}" "db" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${CORE_IMGPROXY_REPLICAS:-0}" "imgproxy" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${CORE_KONG_REPLICAS:-0}" "kong" "$KUBECONFIG_PATH"
+    if [[ "${CORE_KONG_REPLICAS:-0}" -gt 0 ]]; then
+        source ./kubectl_setup_kong.sh
+        kubectl_setup_kong
+    fi
     restart_deployment_if_replicas "${CORE_META_REPLICAS:-0}" "meta" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${CORE_REALTIME_REPLICAS:-0}" "realtime" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${CORE_REST_REPLICAS:-0}" "rest" "$KUBECONFIG_PATH"
