@@ -26,12 +26,17 @@ spec:
         - env:
             - name: HOSTNAME
               value: "::"
+            {{- if gt (int .Values.core.analytics.replicas) 0 }}
             - name: LOGFLARE_URL
               value: http://analytics:4000
             - name: NEXT_ANALYTICS_BACKEND_PROVIDER
               value: postgres
             - name: NEXT_PUBLIC_ENABLE_LOGS
               value: "true"
+            {{- else }}
+            - name: NEXT_PUBLIC_ENABLE_LOGS
+              value: "false"
+            {{- end }}
             - name: STUDIO_PG_META_URL
               value: http://meta:8080
             - name: POSTGRES_HOST
@@ -97,11 +102,13 @@ spec:
                 secretKeyRef:
                   name: env-secrets
                   key: AUTH_JWT_SECRET
+            {{- if gt (int .Values.core.analytics.replicas) 0 }}
             - name: LOGFLARE_PRIVATE_ACCESS_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: env-secrets
                   key: LOGFLARE_PRIVATE_ACCESS_TOKEN
+            {{- end }}
           image: supabase/studio:2025.11.26-sha-8f096b5
           livenessProbe:
             exec:

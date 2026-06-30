@@ -104,7 +104,9 @@ if [[ "${STACK_ARRAY[@]}" =~ "core" ]]; then
     fi
 
     VECTOR_POD_NAME=$(kubectl --kubeconfig="$KUBECONFIG_PATH" get pods --no-headers=true | grep "^vector.*Init" | awk '{print $1}' | head -n 1)
-    if [[ -z "$VECTOR_POD_NAME" ]]; then
+    if [[ "${CORE_VECTOR_REPLICAS:-0}" -eq 0 ]]; then
+        echo "Skipping vector setup (CORE_VECTOR_REPLICAS=0)"
+    elif [[ -z "$VECTOR_POD_NAME" ]]; then
         echo "No pod found with label service=vector"
     else
         start_time=$(date +%s)
@@ -133,7 +135,9 @@ if [[ "${STACK_ARRAY[@]}" =~ "core" ]]; then
     fi
 
     ANALYTICS_POD_NAME=$(kubectl --kubeconfig="$KUBECONFIG_PATH" get pods --no-headers=true | grep "^analytics.*Init" | awk '{print $1}' | head -n 1)
-    if [[ -z "$ANALYTICS_POD_NAME" ]]; then
+    if [[ "${CORE_ANALYTICS_REPLICAS:-0}" -eq 0 ]]; then
+        echo "Skipping analytics setup (CORE_ANALYTICS_REPLICAS=0)"
+    elif [[ -z "$ANALYTICS_POD_NAME" ]]; then
         echo "No pod found with label service=analytics"
     else
         start_time=$(date +%s)

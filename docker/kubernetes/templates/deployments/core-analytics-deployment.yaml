@@ -86,14 +86,11 @@ spec:
                   name: env-secrets
                   key: ANALYTICS_POSTGRES_BACKEND_URL
           image: supabase/logflare:1.45.6
-          startupProbe:
-            tcpSocket:
-              port: 4000
-              host: 127.0.0.1
-            initialDelaySeconds: 15
-            failureThreshold: 90
-            periodSeconds: 5
-            timeoutSeconds: 5
+          resources:
+            requests:
+              memory: {{ .Values.core.analytics.memoryRequest }}
+            limits:
+              memory: {{ .Values.core.analytics.memoryLimit }}
           readinessProbe:
             exec:
               command:
@@ -102,8 +99,9 @@ spec:
                 - -o
                 - /dev/null
                 - http://127.0.0.1:4000/health
-            failureThreshold: 60
-            periodSeconds: 5
+            initialDelaySeconds: 90
+            failureThreshold: 72
+            periodSeconds: 10
             timeoutSeconds: 5
           name: supabase-analytics
           imagePullPolicy: Always
