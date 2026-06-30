@@ -42,6 +42,8 @@ spec:
               value: _analytics
             - name: DB_USERNAME
               value: supabase_admin
+            - name: ERL_AFLAGS
+              value: {{ .Values.core.analytics.erlAflags | quote }}
             - name: LOGFLARE_FEATURE_FLAG_OVERRIDE
               value: multibackend=true
             - name: LOGFLARE_MIN_CLUSTER_SIZE
@@ -87,14 +89,19 @@ spec:
           startupProbe:
             tcpSocket:
               port: 4000
-            initialDelaySeconds: 30
+              host: 127.0.0.1
+            initialDelaySeconds: 15
             failureThreshold: 90
             periodSeconds: 5
             timeoutSeconds: 5
           readinessProbe:
-            httpGet:
-              path: /health
-              port: 4000
+            exec:
+              command:
+                - curl
+                - -sSfL
+                - -o
+                - /dev/null
+                - http://127.0.0.1:4000/health
             failureThreshold: 60
             periodSeconds: 5
             timeoutSeconds: 5
