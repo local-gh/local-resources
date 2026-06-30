@@ -496,6 +496,18 @@ spec:
                   name: env-secrets
                   key: ENABLE_PHONE_AUTOCONFIRM
           image: supabase/gotrue:v2.180.0
+          readinessProbe:
+            exec:
+              command:
+                - wget
+                - --no-verbose
+                - --tries=1
+                - --spider
+                - http://127.0.0.1:9999/health
+            initialDelaySeconds: 5
+            failureThreshold: 6
+            periodSeconds: 5
+            timeoutSeconds: 5
           livenessProbe:
             exec:
               command:
@@ -503,9 +515,10 @@ spec:
                 - --no-verbose
                 - --tries=1
                 - --spider
-                - http://auth:9999/health
+                - http://127.0.0.1:9999/health
+            initialDelaySeconds: 15
             failureThreshold: 10
-            periodSeconds: 5
+            periodSeconds: 10
             timeoutSeconds: 5
           name: supabase-auth
           ports:

@@ -1,11 +1,11 @@
 source ./kubectl_setup_args.sh
 
 if [ -n "$ENV_FILE" ]; then
-    echo "Skipping env secrets setup"
+    echo "Using ENV_FILE=$ENV_FILE for env-secrets"
 else
     ENV_FILE=".env"
-    source ./kubectl_setup_env.sh
 fi
+source ./kubectl_setup_env.sh
 
 if [ ! -d "./kubernetes/release/secrets" ]; then
     mkdir -p "./kubernetes/release/secrets"

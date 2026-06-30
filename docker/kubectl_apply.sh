@@ -1,12 +1,5 @@
 source ./kubectl_setup_args.sh
 
-if [ -n "$ENV_FILE" ]; then
-    echo "Skipping env apply setup"
-else
-    ENV_FILE=".env"
-    source ./kubectl_setup_env.sh
-fi
-
 if [ ! -d "./kubernetes/release/adminusers" ]; then
     mkdir -p "./kubernetes/release/adminusers"
     echo "Directory ./kubernetes/release/adminusers created."
