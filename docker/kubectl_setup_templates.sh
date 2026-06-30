@@ -20,6 +20,8 @@ while IFS= read -r line || [ -n "$line" ]; do
     export "$key=$value"
 done < "$ENV_FILE"
 
+source ./kubectl_replicas_helpers.sh
+
 envsubst < kubernetes/Chart.tpl.yaml > kubernetes/Chart.yaml
 envsubst < kubernetes/values.tpl.yaml > kubernetes/values.yaml
 
@@ -57,7 +59,16 @@ for stack in "${STACK_ARRAY[@]}"; do
     deployments_paths=$(find ./kubernetes/templates/deployments -type f -name "${stack}-*")
     for path in $deployments_paths; do
         filename=$(basename "$path")
-        helm template "$PROJECT_NAME" "./kubernetes" --show-only "templates/deployments/$filename" > kubernetes/release/deployments/$filename
+        temp_file="$(mktemp)"
+        helm template "$PROJECT_NAME" "./kubernetes" --show-only "templates/deployments/$filename" > "$temp_file"
+        replicas="$(manifest_replicas "$temp_file")"
+        if [[ "${replicas:-0}" -gt 0 ]]; then
+            mv "$temp_file" kubernetes/release/deployments/$filename
+        else
+            rm -f "$temp_file"
+            rm -f kubernetes/release/deployments/$filename
+            echo "Skipping deployment manifest $filename (replicas=0)"
+        fi
     done
 
     networkpolicies_paths=$(find ./kubernetes/templates/networkpolicies -type f -name "${stack}-*")
@@ -87,6 +98,12 @@ for stack in "${STACK_ARRAY[@]}"; do
     services_paths=$(find ./kubernetes/templates/services -type f -name "${stack}-*")
     for path in $services_paths; do
         filename=$(basename "$path")
-        helm template "$PROJECT_NAME" "./kubernetes" --show-only "templates/services/$filename" > kubernetes/release/services/$filename
+        deployment_filename="${filename/-service.yaml/-deployment.yaml}"
+        if [[ -f kubernetes/release/deployments/$deployment_filename ]]; then
+            helm template "$PROJECT_NAME" "./kubernetes" --show-only "templates/services/$filename" > kubernetes/release/services/$filename
+        else
+            rm -f kubernetes/release/services/$filename
+            echo "Skipping service manifest $filename (deployment replicas=0)"
+        fi
     done
 done
