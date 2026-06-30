@@ -78,19 +78,25 @@ spec:
                   name: env-secrets
                   key: SECRET_KEY_BASE
           image: supabase/realtime:v2.57.2
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - curl -sSfL --head -o /dev/null -H "Authorization: Bearer $ANON_KEY" http://127.0.0.1:4000/api/tenants/realtime-dev/health
+            initialDelaySeconds: 10
+            failureThreshold: 6
+            periodSeconds: 5
+            timeoutSeconds: 5
           livenessProbe:
             exec:
               command:
-                - curl
-                - -sSfL
-                - --head
-                - -o
-                - /dev/null
-                - -H
-                - 'Authorization: Bearer $ANON_KEY'
-                - http://realtime:4000/api/tenants/realtime-dev/health
+                - sh
+                - -c
+                - curl -sSfL --head -o /dev/null -H "Authorization: Bearer $ANON_KEY" http://127.0.0.1:4000/api/tenants/realtime-dev/health
+            initialDelaySeconds: 30
             failureThreshold: 10
-            periodSeconds: 5
+            periodSeconds: 10
             timeoutSeconds: 5
           name: supabase-realtime
           ports:
