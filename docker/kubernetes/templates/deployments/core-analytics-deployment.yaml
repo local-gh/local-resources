@@ -28,7 +28,7 @@ spec:
             - {{ .Values.core.analytics.logflareHost | quote }}
       initContainers:
         - name: init-analytics
-          image: supabase/logflare:1.26.13
+          image: supabase/postgres:15.8.1.085
           command:
             - sh
             - -c
@@ -42,8 +42,6 @@ spec:
               value: _analytics
             - name: DB_USERNAME
               value: supabase_admin
-            - name: ERL_AFLAGS
-              value: {{ .Values.core.analytics.erlAflags | quote }}
             - name: LOGFLARE_FEATURE_FLAG_OVERRIDE
               value: multibackend=true
             - name: LOGFLARE_MIN_CLUSTER_SIZE
@@ -85,7 +83,7 @@ spec:
                 secretKeyRef:
                   name: env-secrets
                   key: ANALYTICS_POSTGRES_BACKEND_URL
-          image: supabase/logflare:1.26.13
+          image: supabase/logflare:1.45.6
           resources:
             requests:
               memory: {{ .Values.core.analytics.memoryRequest }}
@@ -99,13 +97,9 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 5
           readinessProbe:
-            exec:
-              command:
-                - curl
-                - -sSfL
-                - -o
-                - /dev/null
-                - http://127.0.0.1:4000/health
+            httpGet:
+              path: /health
+              port: 4000
             failureThreshold: 60
             periodSeconds: 5
             timeoutSeconds: 5
