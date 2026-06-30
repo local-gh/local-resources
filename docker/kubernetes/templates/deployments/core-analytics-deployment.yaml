@@ -28,7 +28,7 @@ spec:
             - {{ .Values.core.analytics.logflareHost | quote }}
       initContainers:
         - name: init-analytics
-          image: supabase/postgres:15.8.1.085
+          image: supabase/logflare:1.26.13
           command:
             - sh
             - -c
