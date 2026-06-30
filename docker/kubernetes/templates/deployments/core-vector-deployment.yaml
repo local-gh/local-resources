@@ -50,6 +50,11 @@ spec:
           args:
             - --config
             - /etc/vector/vector.yml
+          resources:
+            requests:
+              memory: {{ .Values.core.vector.memoryRequest }}
+            limits:
+              memory: {{ .Values.core.vector.memoryLimit }}
           startupProbe:
             tcpSocket:
               port: 9001

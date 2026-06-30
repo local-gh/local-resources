@@ -60,6 +60,8 @@ core:
     storage: $CORE_SUPAVISOR_STORAGE
   vector:
     replicas: $CORE_VECTOR_REPLICAS
+    memoryRequest: $CORE_VECTOR_MEMORY_REQUEST
+    memoryLimit: $CORE_VECTOR_MEMORY_LIMIT
     storage: $CORE_VECTOR_STORAGE
 dashboard:
   adminuser:
