@@ -27,9 +27,11 @@ source ./kubectl_replicas_helpers.sh
 IFS=' ' read -ra STACK_ARRAY <<< "$STACKS"
 
 source ./setup_kong.sh
+source ./setup_nginx.sh
 
 NGINX_DEPLOYMENT_NAME=$(kubectl --kubeconfig="$KUBECONFIG_PATH" get deployments --no-headers=true | grep "^nginx" | awk '{print $1}' | head -n 1)
 kubectl --kubeconfig="$KUBECONFIG_PATH" rollout restart deployment $NGINX_DEPLOYMENT_NAME
+source ./kubectl_setup_nginx.sh && kubectl_setup_nginx
 
 if [[ "${STACK_ARRAY[@]}" =~ "core" ]]; then
     restart_deployment_if_replicas "${CORE_ANALYTICS_REPLICAS:-0}" "analytics" "$KUBECONFIG_PATH"

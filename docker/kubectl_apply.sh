@@ -82,6 +82,7 @@ source ./kubectl_apply_services.sh
 
 source ./setup_kong.sh
 source ./setup_nginx.sh
+source ./kubectl_setup_nginx.sh && kubectl_setup_nginx
 source ./kubectl_setup_core.sh
 source ./kubectl_setup_ai.sh
 
