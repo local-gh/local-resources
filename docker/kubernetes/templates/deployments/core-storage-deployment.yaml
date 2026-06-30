@@ -25,15 +25,16 @@ spec:
       initContainers:
         - name: init-storage
           image: curlimages/curl
-          command: [
-            'sh', 
-            '-c', 
-            'until curl -fsSL -m 2 db:5432 > /dev/null 2>&1 || [ $? -eq 52 ]; do echo waiting for postgres; sleep 2; done;',
-            '-c',
-            'until curl -fsSL -m 2 rest:3000; do echo waiting for rest; sleep 2; done;',
-            '-c',
-            'until curl -fsSL -m 2 imgproxy:5001; do echo waiting for imgproxy; sleep 2; done;'
-          ]
+          command:
+            - sh
+            - -c
+            - |
+              until curl -fsSL -m 2 db:5432 > /dev/null 2>&1 || [ $? -eq 52 ]; do echo waiting for postgres; sleep 2; done
+              until curl -fsSL -m 2 rest:3000; do echo waiting for rest; sleep 2; done
+              until curl -fsSL -m 2 imgproxy:5001; do echo waiting for imgproxy; sleep 2; done
+{{- if gt (int .Values.s3.minio.replicas) 0 }}
+              until curl -fsSL -m 2 http://minio:9000/minio/health/live; do echo waiting for minio; sleep 2; done
+{{- end }}
       containers:
         - env:
             - name: AWS_DEFAULT_REGION
@@ -96,6 +97,18 @@ spec:
                   name: env-secrets
                   key: MINIO_ROOT_PASSWORD
           image: supabase/storage-api:v1.32.0
+          readinessProbe:
+            exec:
+              command:
+                - wget
+                - --no-verbose
+                - --tries=1
+                - --spider
+                - http://127.0.0.1:5000/status
+            initialDelaySeconds: 10
+            failureThreshold: 6
+            periodSeconds: 5
+            timeoutSeconds: 5
           livenessProbe:
             exec:
               command:
@@ -103,9 +116,10 @@ spec:
                 - --no-verbose
                 - --tries=1
                 - --spider
-                - http://localhost:5000/health
+                - http://127.0.0.1:5000/status
+            initialDelaySeconds: 30
             failureThreshold: 10
-            periodSeconds: 5
+            periodSeconds: 10
             timeoutSeconds: 5
           name: supabase-storage
           ports:
