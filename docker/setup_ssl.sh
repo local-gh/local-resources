@@ -49,7 +49,11 @@ write_ssl_material() {
     if command_exists dos2unix 2>/dev/null || command -v dos2unix >/dev/null 2>&1; then
         dos2unix "$dest" >/dev/null 2>&1 || true
     fi
-    chmod 600 "$dest" 2>/dev/null || true
+    chmod 644 "$dest" 2>/dev/null || true
+    # Keys stay private; certs are readable (Postgres needs this when run as non-root).
+    if [[ "$dest" == *.key ]]; then
+        chmod 600 "$dest" 2>/dev/null || true
+    fi
     echo "Wrote $dest from environment ($label)"
     return 0
 }

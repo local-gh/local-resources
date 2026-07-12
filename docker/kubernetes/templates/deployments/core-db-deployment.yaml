@@ -40,7 +40,10 @@ spec:
             cp -r /docker-entrypoint-initdb.d/init-scripts/* /tmp/docker-entrypoint-initdb.d/init-scripts/
             ls /docker-entrypoint-initdb.d/migrations
             cp -r /docker-entrypoint-initdb.d/migrations/* /tmp/docker-entrypoint-initdb.d/migrations/
-            chmod 600 /tmp/var/lib/ssl/server.key && chown postgres:postgres /tmp/var/lib/ssl/server.key
+            # Postgres runs as postgres and must own SSL material (kubectl cp leaves root:root).
+            chown -R postgres:postgres /tmp/var/lib/ssl
+            chmod 644 /tmp/var/lib/ssl/server.crt
+            chmod 600 /tmp/var/lib/ssl/server.key
             chmod -R 700 /tmp/etc/postgresql-custom && chown -R postgres:postgres /tmp/etc/postgresql-custom
         volumeMounts:
           - name: ssl-volume
