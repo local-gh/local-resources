@@ -87,7 +87,7 @@ nginx:
   configStorage: $NGINX_CONFIG_STORAGE
   sslStorage: $NGINX_SSL_STORAGE
   digitalocean:
-    certificateId: $NGINX_DIGITALOCEAN_CERTIFICATE_ID
+    certificateName: $NGINX_DIGITALOCEAN_CERTIFICATE_NAME
 nvidia:
 s3:
   minio:
