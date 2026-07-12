@@ -6,8 +6,10 @@
 #     SOPS_AGE_KEY              — age private key file contents (AGE-SECRET-KEY-1...) or base64 of that file
 #                               Must match recipient age1f28gvdqfj0x4ssa2dwaj06sc77gqgrh48770jrvp5xvju8jt3a2q9pp7y4
 #
-# Optional secret when volumes/ssl/root.pass is missing (kubectl_apply.sh sources setup_ssl.sh):
-#   SSL_ROOT_KEY_PASS — sets SSL_ROOT_KEY_PASS for non-interactive setup_ssl.sh in CI.
+# SSL material for nginx/db (written by setup_ssl.sh; PEM or base64 of PEM):
+#   SSL_ROOT_CRT       — volumes/ssl/root.crt
+#   SSL_ROOT_KEY       — volumes/ssl/root.key
+#   SSL_ROOT_KEY_PASS  — volumes/ssl/root.pass
 #
 # Nginx basic auth (docker/volumes/nginx/.htpasswd is gitignored; created in CI before apply):
 #   NGINX_BASIC_AUTH_USER
@@ -107,16 +109,37 @@ jobs:
           mkdir -p ./volumes/nginx
           htpasswd -cb ./volumes/nginx/.htpasswd "${NGINX_BASIC_AUTH_USER}" "${NGINX_BASIC_AUTH_PASSWORD}"
 
+      - name: Write SSL material from secrets
+        working-directory: docker
+        env:
+          SSL_ROOT_CRT: ${{ secrets.SSL_ROOT_CRT }}
+          SSL_ROOT_KEY: ${{ secrets.SSL_ROOT_KEY }}
+          SSL_ROOT_KEY_PASS: ${{ secrets.SSL_ROOT_KEY_PASS }}
+        run: |
+          missing=()
+          [[ -z "${SSL_ROOT_CRT:-}" ]] && missing+=(SSL_ROOT_CRT)
+          [[ -z "${SSL_ROOT_KEY:-}" ]] && missing+=(SSL_ROOT_KEY)
+          [[ -z "${SSL_ROOT_KEY_PASS:-}" ]] && missing+=(SSL_ROOT_KEY_PASS)
+          if ((${#missing[@]})); then
+            echo "Missing production SSL secrets: ${missing[*]}"
+            echo "Add PEM (or base64 of PEM) for SSL_ROOT_CRT / SSL_ROOT_KEY and the passphrase SSL_ROOT_KEY_PASS."
+            exit 1
+          fi
+          mkdir -p ./volumes/ssl
+          # setup_ssl.sh writes root.crt / root.key / root.pass from these env vars.
+          source ./setup_ssl.sh
+          test -s ./volumes/ssl/root.crt
+          test -s ./volumes/ssl/root.key
+          test -s ./volumes/ssl/root.pass
+
       - name: Apply Kubernetes stack
         working-directory: docker
         env:
           KUBECONFIG_FILE: ${{ env.KUBECONFIG_FILE }}
+          SSL_ROOT_CRT: ${{ secrets.SSL_ROOT_CRT }}
+          SSL_ROOT_KEY: ${{ secrets.SSL_ROOT_KEY }}
           SSL_ROOT_KEY_PASS: ${{ secrets.SSL_ROOT_KEY_PASS }}
         run: |
-          if [[ ! -f ./volumes/ssl/root.pass && -z "${SSL_ROOT_KEY_PASS:-}" ]]; then
-            echo "Missing docker/volumes/ssl/root.pass. Add it to the repo or set SSL_ROOT_KEY_PASS (kubectl_apply.sh runs setup_ssl.sh)."
-            exit 1
-          fi
           # Pseudo-TTY so kubectl exec -it in kubectl_setup_core.sh works non-interactively.
           script -q -e -c "bash kubectl_apply.sh -c \"${KUBECONFIG_FILE}\""
 
