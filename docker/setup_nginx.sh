@@ -7,7 +7,7 @@ fi
 
 IFS=' ' read -ra STACK_ARRAY <<< "$STACKS"
 
-export host="\$host" server_port="\$server_port" http_x_csrf_token="\$http_x_csrf_token" http_authorization="\$http_authorization" http_cookie="\$http_cookie" remote_addr="\$remote_addr" proxy_add_x_forwarded_for="\$proxy_add_x_forwarded_for" scheme="\$scheme" http_upgrade="\$http_upgrade" connection_upgrade="\$connection_upgrade"
+export host="\$host" server_port="\$server_port" http_x_csrf_token="\$http_x_csrf_token" http_authorization="\$http_authorization" http_cookie="\$http_cookie" remote_addr="\$remote_addr" proxy_add_x_forwarded_for="\$proxy_add_x_forwarded_for" scheme="\$scheme" http_upgrade="\$http_upgrade" connection_upgrade="\$connection_upgrade" request_uri="\$request_uri" redirect_to_https="\$redirect_to_https" is_localhost="\$is_localhost"
 
 append_nginx_block_if_replicas() {
     local replicas="${1:-0}"

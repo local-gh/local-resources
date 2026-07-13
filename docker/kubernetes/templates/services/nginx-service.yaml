@@ -3,11 +3,10 @@ kind: Service
 metadata:
   name: nginx-core
   annotations:
-    service.beta.kubernetes.io/do-loadbalancer-protocol: "https"
-    service.beta.kubernetes.io/do-loadbalancer-tls-ports: "443"
-    service.beta.kubernetes.io/do-loadbalancer-certificate-name: "{{ .Values.nginx.digitalocean.certificateName }}"
+    # TCP passthrough so nginx terminates TLS with /etc/ssl/root.{crt,key}.
+    service.beta.kubernetes.io/do-loadbalancer-protocol: "tcp"
+    service.beta.kubernetes.io/do-loadbalancer-tls-passthrough: "true"
     service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
-    service.beta.kubernetes.io/do-loadbalancer-redirect-http-to-https: "true"
   labels:
     service: nginx-core
 spec:
@@ -22,4 +21,4 @@ spec:
     - name: https
       protocol: TCP
       port: 443
-      targetPort: 80
+      targetPort: 443
