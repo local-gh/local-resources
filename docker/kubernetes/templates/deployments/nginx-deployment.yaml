@@ -21,17 +21,19 @@ spec:
           - /bin/sh
           - -c
           - |
-            ls /etc/nginx
-            cp -r /etc/nginx/* /tmp/etc/nginx
-            rm /tmp/etc/nginx/nginx.conf
-            mkdir /tmp/etc/nginx/conf.d/http
-            mkdir /tmp/etc/nginx/conf.d/stream
-            while [ ! -e /tmp/etc/nginx/nginx.conf ] || [ ! -s /tmp/etc/nginx/nginx.conf ]; do 
-              echo 'Waiting for all copied files...'
-              sleep 10
+            set -e
+            mkdir -p /tmp/etc/nginx/conf.d/http /tmp/etc/nginx/conf.d/stream
+            # Seed defaults, then remove config so we always wait for a fresh copy from the host.
+            cp -a /etc/nginx/. /tmp/etc/nginx/ 2>/dev/null || true
+            rm -f /tmp/etc/nginx/nginx.conf /tmp/etc/nginx/.htpasswd
+            mkdir -p /tmp/etc/nginx/conf.d/http /tmp/etc/nginx/conf.d/stream
+            echo "Waiting for nginx.conf and .htpasswd to be copied onto the volume..."
+            while [ ! -s /tmp/etc/nginx/nginx.conf ] || [ ! -s /tmp/etc/nginx/.htpasswd ]; do
+              sleep 5
             done
-            cat /tmp/etc/nginx/.htpasswd
-            cat /tmp/etc/nginx/nginx.conf
+            echo "Nginx config received:"
+            ls -la /tmp/etc/nginx/nginx.conf /tmp/etc/nginx/.htpasswd
+            ls -la /tmp/etc/nginx/conf.d/http/ || true
         volumeMounts:
           - mountPath: /tmp/etc/nginx
             name: nginx-volume
