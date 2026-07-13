@@ -25,6 +25,16 @@ source ./kubectl_replicas_helpers.sh
 envsubst < kubernetes/Chart.tpl.yaml > kubernetes/Chart.yaml
 envsubst < kubernetes/values.tpl.yaml > kubernetes/values.yaml
 
+if [[ "${NGINX_REPLICAS:-0}" -gt 0 ]]; then
+    if [[ -z "${NGINX_DIGITALOCEAN_CERTIFICATE_ID:-}" ]]; then
+        echo "WARNING: NGINX_DIGITALOCEAN_CERTIFICATE_ID is empty."
+        echo "         DO LoadBalancer will not terminate TLS on :443 (browsers show ERR_SSL_PROTOCOL_ERROR)."
+        echo "         Set it from: doctl compute certificate list"
+    else
+        echo "Nginx LB certificate id=${NGINX_DIGITALOCEAN_CERTIFICATE_ID}"
+    fi
+fi
+
 helm template "$PROJECT_NAME" "./kubernetes" --show-only "templates/services/nginx-service.yaml" > kubernetes/release/services/nginx-service.yaml
 helm template "$PROJECT_NAME" "./kubernetes" --show-only "templates/deployments/nginx-deployment.yaml" > kubernetes/release/deployments/nginx-deployment.yaml
 helm template "$PROJECT_NAME" "./kubernetes" --show-only "templates/persistentvolumeclaims/nginx-persistentvolumeclaim.yaml" > kubernetes/release/persistentvolumeclaims/nginx-persistentvolumeclaim.yaml

@@ -3,14 +3,18 @@ kind: Service
 metadata:
   name: nginx-core
   annotations:
-    # DO LB terminates TLS with a trusted cert; nginx receives plain HTTP on :80.
+    # Default backend protocol is HTTP. Port 443 is TLS-terminated at the DO LB.
     service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
     service.beta.kubernetes.io/do-loadbalancer-tls-ports: "443"
-{{- if .Values.nginx.digitalocean.certificateName }}
-    service.beta.kubernetes.io/do-loadbalancer-certificate-name: "{{ .Values.nginx.digitalocean.certificateName }}"
+{{- if .Values.nginx.digitalocean.certificateId }}
+    service.beta.kubernetes.io/do-loadbalancer-certificate-id: {{ .Values.nginx.digitalocean.certificateId | quote }}
 {{- end }}
     service.beta.kubernetes.io/do-loadbalancer-redirect-http-to-https: "true"
     service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
+    # Health checks must use HTTP against nginx :80 (not TLS).
+    service.beta.kubernetes.io/do-loadbalancer-healthcheck-protocol: "http"
+    service.beta.kubernetes.io/do-loadbalancer-healthcheck-port: "80"
+    service.beta.kubernetes.io/do-loadbalancer-healthcheck-path: "/"
   labels:
     service: nginx-core
 spec:
@@ -25,4 +29,5 @@ spec:
     - name: https
       protocol: TCP
       port: 443
+      # After LB TLS termination, traffic to nginx is plain HTTP.
       targetPort: 80
