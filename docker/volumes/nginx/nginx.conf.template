@@ -23,6 +23,7 @@ http {
     }
 
     # Redirect only when the original client request was HTTP (not localhost).
+    # Behind the DO LB, HTTPS clients arrive as HTTP with X-Forwarded-Proto: https.
     map "$forwarded_proto:$is_localhost" $redirect_to_https {
         default 0;
         "http:0" 1;

@@ -26,12 +26,12 @@ envsubst < kubernetes/Chart.tpl.yaml > kubernetes/Chart.yaml
 envsubst < kubernetes/values.tpl.yaml > kubernetes/values.yaml
 
 if [[ "${NGINX_REPLICAS:-0}" -gt 0 ]]; then
-    if [[ -z "${NGINX_DIGITALOCEAN_CERTIFICATE_ID:-}" ]]; then
-        echo "WARNING: NGINX_DIGITALOCEAN_CERTIFICATE_ID is empty."
+    if [[ -z "${NGINX_DIGITALOCEAN_CERTIFICATE_NAME:-}" ]]; then
+        echo "WARNING: NGINX_DIGITALOCEAN_CERTIFICATE_NAME is empty."
         echo "         DO LoadBalancer will not terminate TLS on :443 (browsers show ERR_SSL_PROTOCOL_ERROR)."
         echo "         Set it from: doctl compute certificate list"
     else
-        echo "Nginx LB certificate id=${NGINX_DIGITALOCEAN_CERTIFICATE_ID}"
+        echo "Nginx LB certificate name=${NGINX_DIGITALOCEAN_CERTIFICATE_NAME}"
     fi
 fi
 

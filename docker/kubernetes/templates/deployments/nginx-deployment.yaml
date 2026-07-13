@@ -31,15 +31,11 @@ spec:
               sleep 10
             done
             cat /tmp/etc/nginx/.htpasswd
-            cat /tmp/etc/ssl/root.pass
             cat /tmp/etc/nginx/nginx.conf
         volumeMounts:
           - mountPath: /tmp/etc/nginx
             name: nginx-volume
             subPath: nginx
-          - mountPath: /tmp/etc/ssl
-            name: nginx-ssl-volume
-            subPath: ssl
       containers:
       - name: nginx
         image: nginx:latest
@@ -47,9 +43,6 @@ spec:
           - mountPath: /etc/nginx
             name: nginx-volume
             subPath: nginx
-          - mountPath: /etc/ssl
-            name: nginx-ssl-volume
-            subPath: ssl
         ports:
           - containerPort: 80
           - containerPort: 443
@@ -58,6 +51,3 @@ spec:
       - name: nginx-volume
         persistentVolumeClaim:
             claimName: nginx-volume-claim
-      - name: nginx-ssl-volume
-        persistentVolumeClaim:
-            claimName: nginx-ssl-volume-claim

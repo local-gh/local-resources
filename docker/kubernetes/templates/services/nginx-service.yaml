@@ -3,11 +3,17 @@ kind: Service
 metadata:
   name: nginx-core
   annotations:
-    service.beta.kubernetes.io/do-loadbalancer-type: "REGIONAL"
-    service.beta.kubernetes.io/do-loadbalancer-certificate-name: {{ .Values.nginx.digitalocean.certificateName | quote }}
+    # DO LB terminates TLS; nginx speaks plain HTTP on :80 and :443.
+    service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
     service.beta.kubernetes.io/do-loadbalancer-tls-ports: "443"
-    service.beta.kubernetes.io/do-loadbalancer-http-ports: "80"
+{{- if .Values.nginx.digitalocean.certificateName }}
+    service.beta.kubernetes.io/do-loadbalancer-certificate-name: {{ .Values.nginx.digitalocean.certificateName | quote }}
+{{- end }}
     service.beta.kubernetes.io/do-loadbalancer-redirect-http-to-https: "true"
+    service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
+    service.beta.kubernetes.io/do-loadbalancer-healthcheck-protocol: "http"
+    service.beta.kubernetes.io/do-loadbalancer-healthcheck-port: "80"
+    service.beta.kubernetes.io/do-loadbalancer-healthcheck-path: "/"
   labels:
     service: nginx-core
 spec:
@@ -22,5 +28,5 @@ spec:
     - name: https
       protocol: TCP
       port: 443
-      # After LB TLS termination, traffic to nginx is plain HTTP.
-      targetPort: 80
+      # LB terminates TLS, then forwards plain HTTP to nginx :443.
+      targetPort: 443

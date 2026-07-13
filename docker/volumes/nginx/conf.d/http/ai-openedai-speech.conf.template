@@ -1,6 +1,6 @@
 server {
     listen 80;
-    listen 443 ssl http2;
+    listen 443;
     server_name $NGINX_OPENEDAI_SPEECH_SERVER_HOST_URL;
 
     if ($redirect_to_https = 1) {
