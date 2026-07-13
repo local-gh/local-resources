@@ -28,13 +28,6 @@ http {
         "http:0" 1;
     }
 
-    # Optional nginx TLS (local/direct :443). Public *.local-app.com HTTPS is terminated at the DO LB.
-    ssl_certificate     /etc/ssl/root.crt;
-    ssl_certificate_key /etc/ssl/root.key;
-    ssl_password_file   /etc/ssl/root.pass;
-    ssl_protocols       TLSv1.2 TLSv1.3;
-    ssl_prefer_server_ciphers on;
-
     $NGINX_CORE_HTTP_CONFIG
     $NGINX_ECOMMERCE_HTTP_CONFIG
     $NGINX_AI_HTTP_CONFIG

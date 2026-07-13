@@ -3,18 +3,11 @@ kind: Service
 metadata:
   name: nginx-core
   annotations:
-    # Default backend protocol is HTTP. Port 443 is TLS-terminated at the DO LB.
-    service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
+    service.beta.kubernetes.io/do-loadbalancer-type: "REGIONAL"
+    service.beta.kubernetes.io/do-loadbalancer-certificate-name: {{ .Values.nginx.digitalocean.certificateName | quote }}
     service.beta.kubernetes.io/do-loadbalancer-tls-ports: "443"
-{{- if .Values.nginx.digitalocean.certificateId }}
-    service.beta.kubernetes.io/do-loadbalancer-certificate-id: {{ .Values.nginx.digitalocean.certificateId | quote }}
-{{- end }}
+    service.beta.kubernetes.io/do-loadbalancer-http-ports: "80"
     service.beta.kubernetes.io/do-loadbalancer-redirect-http-to-https: "true"
-    service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
-    # Health checks must use HTTP against nginx :80 (not TLS).
-    service.beta.kubernetes.io/do-loadbalancer-healthcheck-protocol: "http"
-    service.beta.kubernetes.io/do-loadbalancer-healthcheck-port: "80"
-    service.beta.kubernetes.io/do-loadbalancer-healthcheck-path: "/"
   labels:
     service: nginx-core
 spec:
