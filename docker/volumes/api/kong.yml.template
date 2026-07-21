@@ -132,9 +132,12 @@ services:
             - anon
 
   ## Secure Realtime routes
+  # KONG_REALTIME_HOST must match Realtime's tenant Host lookup (seeded: realtime-dev).
+  # Compose default: realtime-dev.supabase-realtime (container_name).
+  # Kubernetes: realtime-dev (Service name).
   - name: realtime-v1-ws
     _comment: 'Realtime: /realtime/v1/* -> ws://realtime:4000/socket/*'
-    url: http://realtime:4000/socket
+    url: http://${KONG_REALTIME_HOST}:4000/socket
     protocol: ws
     routes:
       - name: realtime-v1-ws
@@ -153,8 +156,8 @@ services:
             - admin
             - anon
   - name: realtime-v1-rest
-    _comment: 'Realtime: /realtime/v1/* -> ws://realtime:4000/socket/*'
-    url: http://realtime:4000/api
+    _comment: 'Realtime: /realtime/v1/* -> http://realtime:4000/api/*'
+    url: http://${KONG_REALTIME_HOST}:4000/api
     protocol: http
     routes:
       - name: realtime-v1-rest

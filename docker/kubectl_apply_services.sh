@@ -31,3 +31,6 @@ for stack in "${STACK_ARRAY[@]}"; do
         fi
     done
 done
+
+# Realtime Service renamed realtime → realtime-dev (Kong Host header = tenant id).
+kubectl --kubeconfig="$KUBECONFIG_PATH" delete service realtime --ignore-not-found
