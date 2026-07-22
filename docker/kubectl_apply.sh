@@ -70,6 +70,8 @@ IFS=' ' read -ra STACK_ARRAY <<< "$STACKS"
 
 # Check if the directory exists, if not, create it
 source ./kubectl_setup_templates.sh
+source ./kubectl_cleanup_terminated_pods.sh
+kubectl_cleanup_terminated_pods
 source ./kubectl_apply_adminusers.sh
 source ./kubectl_apply_clusterroles.sh
 source ./kubectl_apply_daemonsets.sh
@@ -85,6 +87,8 @@ source ./setup_nginx.sh
 source ./kubectl_setup_nginx.sh && kubectl_setup_nginx
 source ./kubectl_setup_core.sh
 source ./kubectl_setup_ai.sh
+
+kubectl_cleanup_terminated_pods
 
 kubectl --kubeconfig="$KUBECONFIG_PATH" apply -f "https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml"
 kubectl --kubeconfig="$KUBECONFIG_PATH" proxy &
