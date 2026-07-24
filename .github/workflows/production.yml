@@ -151,5 +151,12 @@ jobs:
         working-directory: docker
         env:
           KUBECONFIG_FILE: ${{ env.KUBECONFIG_FILE }}
+          NGINX_BASIC_AUTH_USER: ${{ secrets.NGINX_BASIC_AUTH_USER }}
+          NGINX_BASIC_AUTH_PASSWORD: ${{ secrets.NGINX_BASIC_AUTH_PASSWORD }}
+          SSL_ROOT_CRT: ${{ secrets.SSL_ROOT_CRT }}
+          SSL_ROOT_KEY: ${{ secrets.SSL_ROOT_KEY }}
+          SSL_ROOT_KEY_PASS: ${{ secrets.SSL_ROOT_KEY_PASS }}
+          CI: true
         run: |
-          bash kubectl_restart.sh -c "${KUBECONFIG_FILE}"
+          # Pseudo-TTY so kubectl exec -it in kubectl_setup_core.sh works non-interactively.
+          script -q -e -c "bash kubectl_restart.sh -c \"${KUBECONFIG_FILE}\""

@@ -1,8 +1,11 @@
-# Restarts Kubernetes deployments so running pods pick up updated env-secrets.
+# Restarts Kubernetes deployments so running pods pick up updated env-secrets,
+# then re-copies init-container configs (same as kubectl_apply.sh setup steps).
 # Use after changing docker/.env.enc when a full deploy is not needed.
 #
 # Requires the same secrets as the Production workflow:
 #   KUBECONFIG_FILE, SOPS_AGE_KEY
+#   NGINX_BASIC_AUTH_USER, NGINX_BASIC_AUTH_PASSWORD
+#   SSL_ROOT_CRT, SSL_ROOT_KEY, SSL_ROOT_KEY_PASS
 name: Production Restart
 
 on:
@@ -20,7 +23,7 @@ jobs:
     name: Restart deployments (DigitalOcean)
     runs-on: ubuntu-latest
     environment: production
-    timeout-minutes: 30
+    timeout-minutes: 90
     defaults:
       run:
         shell: bash
@@ -32,7 +35,7 @@ jobs:
       - name: Install tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y dos2unix
+          sudo apt-get install -y gettext-base openssl apache2-utils dos2unix util-linux
 
           curl -fsSL "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o /tmp/kubectl
           sudo install -m 0755 /tmp/kubectl /usr/local/bin/kubectl
@@ -71,6 +74,44 @@ jobs:
           cp "${GITHUB_WORKSPACE}/docker/.env" "${GITHUB_WORKSPACE}/.env"
           dos2unix "${GITHUB_WORKSPACE}/docker/.env" "${GITHUB_WORKSPACE}/.env" >/dev/null 2>&1
 
+      - name: Write nginx basic auth from secrets
+        working-directory: docker
+        env:
+          NGINX_BASIC_AUTH_USER: ${{ secrets.NGINX_BASIC_AUTH_USER }}
+          NGINX_BASIC_AUTH_PASSWORD: ${{ secrets.NGINX_BASIC_AUTH_PASSWORD }}
+        run: |
+          missing=()
+          [[ -z "${NGINX_BASIC_AUTH_USER:-}" ]] && missing+=(NGINX_BASIC_AUTH_USER)
+          [[ -z "${NGINX_BASIC_AUTH_PASSWORD:-}" ]] && missing+=(NGINX_BASIC_AUTH_PASSWORD)
+          if ((${#missing[@]})); then
+            echo "Missing production nginx basic auth secrets: ${missing[*]}"
+            exit 1
+          fi
+          mkdir -p ./volumes/nginx
+          source ./setup_password.sh
+          test -s ./volumes/nginx/.htpasswd
+
+      - name: Write SSL material from secrets
+        working-directory: docker
+        env:
+          SSL_ROOT_CRT: ${{ secrets.SSL_ROOT_CRT }}
+          SSL_ROOT_KEY: ${{ secrets.SSL_ROOT_KEY }}
+          SSL_ROOT_KEY_PASS: ${{ secrets.SSL_ROOT_KEY_PASS }}
+        run: |
+          missing=()
+          [[ -z "${SSL_ROOT_CRT:-}" ]] && missing+=(SSL_ROOT_CRT)
+          [[ -z "${SSL_ROOT_KEY:-}" ]] && missing+=(SSL_ROOT_KEY)
+          [[ -z "${SSL_ROOT_KEY_PASS:-}" ]] && missing+=(SSL_ROOT_KEY_PASS)
+          if ((${#missing[@]})); then
+            echo "Missing production SSL secrets: ${missing[*]}"
+            exit 1
+          fi
+          mkdir -p ./volumes/ssl
+          source ./setup_ssl.sh
+          test -s ./volumes/ssl/root.crt
+          test -s ./volumes/ssl/root.key
+          test -s ./volumes/ssl/root.pass
+
       - name: Recreate env-secrets
         working-directory: docker
         env:
@@ -83,5 +124,12 @@ jobs:
         working-directory: docker
         env:
           KUBECONFIG_FILE: ${{ env.KUBECONFIG_FILE }}
+          NGINX_BASIC_AUTH_USER: ${{ secrets.NGINX_BASIC_AUTH_USER }}
+          NGINX_BASIC_AUTH_PASSWORD: ${{ secrets.NGINX_BASIC_AUTH_PASSWORD }}
+          SSL_ROOT_CRT: ${{ secrets.SSL_ROOT_CRT }}
+          SSL_ROOT_KEY: ${{ secrets.SSL_ROOT_KEY }}
+          SSL_ROOT_KEY_PASS: ${{ secrets.SSL_ROOT_KEY_PASS }}
+          CI: true
         run: |
-          bash kubectl_restart.sh -c "${KUBECONFIG_FILE}"
+          # Pseudo-TTY so kubectl exec -it in kubectl_setup_core.sh works non-interactively.
+          script -q -e -c "bash kubectl_restart.sh -c \"${KUBECONFIG_FILE}\""

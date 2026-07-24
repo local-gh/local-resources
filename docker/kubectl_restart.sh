@@ -26,12 +26,17 @@ source ./kubectl_replicas_helpers.sh
 
 IFS=' ' read -ra STACK_ARRAY <<< "$STACKS"
 
+# Local material required by kubectl cp into init containers after restart.
+source ./setup_password.sh
+source ./setup_ssl.sh
 source ./setup_kong.sh
 source ./setup_nginx.sh
 
 NGINX_DEPLOYMENT_NAME=$(kubectl --kubeconfig="$KUBECONFIG_PATH" get deployments --no-headers=true | grep "^nginx" | awk '{print $1}' | head -n 1)
-kubectl --kubeconfig="$KUBECONFIG_PATH" rollout restart deployment $NGINX_DEPLOYMENT_NAME
-source ./kubectl_setup_nginx.sh && kubectl_setup_nginx
+if [[ -n "$NGINX_DEPLOYMENT_NAME" ]]; then
+    kubectl --kubeconfig="$KUBECONFIG_PATH" rollout restart deployment "$NGINX_DEPLOYMENT_NAME"
+    source ./kubectl_setup_nginx.sh && kubectl_setup_nginx
+fi
 
 if [[ "${STACK_ARRAY[@]}" =~ "core" ]]; then
     restart_deployment_if_replicas "${CORE_ANALYTICS_REPLICAS:-0}" "analytics" "$KUBECONFIG_PATH"
@@ -39,10 +44,6 @@ if [[ "${STACK_ARRAY[@]}" =~ "core" ]]; then
     restart_deployment_if_replicas "${CORE_DB_REPLICAS:-0}" "db" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${CORE_IMGPROXY_REPLICAS:-0}" "imgproxy" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${CORE_KONG_REPLICAS:-0}" "kong" "$KUBECONFIG_PATH"
-    if [[ "${CORE_KONG_REPLICAS:-0}" -gt 0 ]]; then
-        source ./kubectl_setup_kong.sh
-        kubectl_setup_kong
-    fi
     restart_deployment_if_replicas "${CORE_META_REPLICAS:-0}" "meta" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${CORE_REALTIME_REPLICAS:-0}" "realtime" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${CORE_REST_REPLICAS:-0}" "rest" "$KUBECONFIG_PATH"
@@ -50,6 +51,9 @@ if [[ "${STACK_ARRAY[@]}" =~ "core" ]]; then
     restart_deployment_if_replicas "${CORE_STUDIO_REPLICAS:-0}" "studio" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${CORE_SUPAVISOR_REPLICAS:-0}" "supavisor" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${CORE_VECTOR_REPLICAS:-0}" "vector" "$KUBECONFIG_PATH"
+
+    # Wait for Init containers and kubectl cp configs (db, kong, supavisor, vector, …).
+    source ./kubectl_setup_core.sh
 else
     echo "Skipping core stack"
 fi
@@ -65,6 +69,7 @@ fi
 if [[ "${STACK_ARRAY[@]}" =~ "blog" ]]; then
     restart_deployment_if_replicas "${BLOG_GHOST_REPLICAS:-0}" "ghost" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${BLOG_DB_REPLICAS:-0}" "ghost-db" "$KUBECONFIG_PATH"
+    source ./kubectl_setup_blog.sh
 else
     echo "Skipping blog stack"
 fi
@@ -81,12 +86,15 @@ if [[ "${STACK_ARRAY[@]}" =~ "ai" ]]; then
     restart_deployment_if_replicas "${AI_OPEN_WEBUI_REPLICAS:-0}" "open-webui" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${AI_OPENEDAI_SPEECH_SERVER_REPLICAS:-0}" "openedai-speech-server" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${AI_STANDALONE_REPLICAS:-0}" "standalone" "$KUBECONFIG_PATH"
+    source ./kubectl_setup_ai.sh
 else
     echo "Skipping ai stack"
 fi
 
 DASHBOARD_DEPLOYMENT_NAME=$(kubectl --kubeconfig="$KUBECONFIG_PATH" get deployments --no-headers=true | grep "^dashboard" | awk '{print $1}' | head -n 1)
-kubectl --kubeconfig="$KUBECONFIG_PATH" rollout restart deployment $DASHBOARD_DEPLOYMENT_NAME -n kubernetes-dashboard
+if [[ -n "$DASHBOARD_DEPLOYMENT_NAME" ]]; then
+    kubectl --kubeconfig="$KUBECONFIG_PATH" rollout restart deployment "$DASHBOARD_DEPLOYMENT_NAME" -n kubernetes-dashboard
+fi
 
 if [ -z "${SKIP_DASHBOARD_PROXY:-}" ] && [ -z "${CI:-}" ]; then
     kubectl --kubeconfig="$KUBECONFIG_PATH" proxy &
