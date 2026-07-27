@@ -1,0 +1,68 @@
+# Monitors Kubernetes cluster resource usage via kubectl commands.
+#
+# Configure the GitHub Environment "production" (or repo-level secrets/variables):
+#   Secrets:
+#     KUBECONFIG_FILE              — Full kubeconfig content used by kubectl.
+#
+# Requires metrics-server installed in the cluster for `kubectl top` commands.
+# Install metrics-server: kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+name: Production Monitor
+
+on:
+  workflow_dispatch:
+    inputs:
+      namespace:
+        description: 'Kubernetes namespace to monitor'
+        required: false
+        type: string
+        default: 'local'
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-monitor
+  cancel-in-progress: true
+
+jobs:
+  monitor-kubernetes:
+    name: Monitor Kubernetes cluster resources
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install kubectl
+        run: |
+          curl -fsSL "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o /tmp/kubectl
+          sudo install -m 0755 /tmp/kubectl /usr/local/bin/kubectl
+
+      - name: Write kubeconfig
+        env:
+          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG_FILE }}
+        run: |
+          KUBECONFIG_FILE="${RUNNER_TEMP}/kubeconfig"
+          if [[ -z "${KUBECONFIG_CONTENT}" ]]; then
+            echo "KUBECONFIG_FILE secret is not set."
+            exit 1
+          fi
+          printf '%s\n' "${KUBECONFIG_CONTENT}" > "${KUBECONFIG_FILE}"
+          chmod 600 "${KUBECONFIG_FILE}"
+          echo "KUBECONFIG_FILE=${KUBECONFIG_FILE}" >> "${GITHUB_ENV}"
+
+      - name: Run monitoring commands
+        working-directory: docker
+        env:
+          KUBECONFIG_FILE: ${{ env.KUBECONFIG_FILE }}
+          NAMESPACE: ${{ inputs.namespace || 'local' }}
+        run: |
+          bash kubectl_monitor.sh -c "${KUBECONFIG_FILE}"
