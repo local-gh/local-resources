@@ -53,6 +53,8 @@ core:
     replicas: 1
   supavisor:
     replicas: 1
+    memoryRequest: 512Mi
+    memoryLimit: 1Gi
     storage: 100Mi
   vector:
     replicas: 1

@@ -57,6 +57,8 @@ core:
     replicas: $CORE_STUDIO_REPLICAS
   supavisor:
     replicas: $CORE_SUPAVISOR_REPLICAS
+    memoryRequest: $CORE_SUPAVISOR_MEMORY_REQUEST
+    memoryLimit: $CORE_SUPAVISOR_MEMORY_LIMIT
     storage: $CORE_SUPAVISOR_STORAGE
   vector:
     replicas: $CORE_VECTOR_REPLICAS

@@ -113,6 +113,11 @@ spec:
                   name: env-secrets
                   key: POOLER_MAX_CLIENT_CONN
           image: supabase/supavisor:2.7.4
+          resources:
+            requests:
+              memory: {{ .Values.core.supavisor.memoryRequest }}
+            limits:
+              memory: {{ .Values.core.supavisor.memoryLimit }}
           livenessProbe:
             exec:
               command:
