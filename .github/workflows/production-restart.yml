@@ -117,8 +117,9 @@ jobs:
         env:
           KUBECONFIG_FILE: ${{ env.KUBECONFIG_FILE }}
         run: |
-          kubectl --kubeconfig="${KUBECONFIG_FILE}" delete secret env-secrets --ignore-not-found
-          kubectl --kubeconfig="${KUBECONFIG_FILE}" create secret generic env-secrets --from-env-file=../.env
+          # Quote-strips dotenv values (kubectl --from-env-file does not).
+          export KUBECONFIG_PATH="${KUBECONFIG_FILE}"
+          source ./kubectl_setup_env.sh
 
       - name: Restart deployments
         working-directory: docker
