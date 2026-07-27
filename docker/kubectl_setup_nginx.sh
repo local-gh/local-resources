@@ -70,6 +70,12 @@ kubectl_setup_nginx() {
         echo "Skipping nginx blog config"
     fi
 
+    if [[ "${STACK_ARRAY[@]}" =~ "s3" ]]; then
+        kubectl --kubeconfig="$KUBECONFIG_PATH" cp ./volumes/nginx/conf.d/http/s3.conf "$NGINX_POD_NAME:/tmp/etc/nginx/conf.d/http/s3.conf" -c init-nginx
+    else
+        echo "Skipping nginx s3 config"
+    fi
+
     # Copy nginx.conf last — init exits as soon as this file is non-empty.
     kubectl --kubeconfig="$KUBECONFIG_PATH" cp ./volumes/nginx/.htpasswd "$NGINX_POD_NAME:/tmp/etc/nginx/.htpasswd" -c init-nginx
     kubectl --kubeconfig="$KUBECONFIG_PATH" cp ./volumes/nginx/nginx.conf "$NGINX_POD_NAME:/tmp/etc/nginx/nginx.conf" -c init-nginx
