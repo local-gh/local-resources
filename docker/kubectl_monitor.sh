@@ -4,7 +4,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/kubectl_setup_args.sh"
 
 : "${KUBECONFIG_PATH:?KUBECONFIG_PATH is required (-c flag or env var)}"
-: "${NAMESPACE:=local}"
+: "${NAMESPACE:=default}"
 
 export KUBECONFIG="${KUBECONFIG_PATH}"
 

@@ -15,7 +15,7 @@ on:
         description: 'Kubernetes namespace to monitor'
         required: false
         type: string
-        default: 'local'
+        default: 'default'
   schedule:
     # Run every 6 hours
     - cron: '0 */6 * * *'
@@ -63,6 +63,6 @@ jobs:
         working-directory: docker
         env:
           KUBECONFIG_FILE: ${{ env.KUBECONFIG_FILE }}
-          NAMESPACE: ${{ inputs.namespace || 'local' }}
+          NAMESPACE: ${{ inputs.namespace || 'default' }}
         run: |
           bash kubectl_monitor.sh -c "${KUBECONFIG_FILE}"
