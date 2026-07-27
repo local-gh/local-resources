@@ -30,7 +30,7 @@ spec:
             mkdir -p /tmp/docker-entrypoint-initdb.d/init-scripts
             rm -r /tmp/docker-entrypoint-initdb.d/migrations/*
             rm -r /tmp/docker-entrypoint-initdb.d/init-scripts/*
-            while [ ! -e /tmp/docker-entrypoint-initdb.d/migrations/99-pooler.sql ] || [ ! -s /tmp/docker-entrypoint-initdb.d/migrations/99-pooler.sql ]; do 
+            while [ ! -e /tmp/docker-entrypoint-initdb.d/migrations/99-logs.sql ] || [ ! -s /tmp/docker-entrypoint-initdb.d/migrations/99-logs.sql ]; do
               echo 'Waiting for all copied files...'
               sleep 10
             done

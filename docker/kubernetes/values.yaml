@@ -51,9 +51,6 @@ core:
     storage: 100Mi
   studio:
     replicas: 1
-  supavisor:
-    replicas: 1
-    storage: 100Mi
   vector:
     replicas: 1
     storage: 100Mi

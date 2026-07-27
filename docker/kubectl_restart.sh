@@ -49,10 +49,9 @@ if [[ "${STACK_ARRAY[@]}" =~ "core" ]]; then
     restart_deployment_if_replicas "${CORE_REST_REPLICAS:-0}" "rest" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${CORE_STORAGE_REPLICAS:-0}" "storage" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${CORE_STUDIO_REPLICAS:-0}" "studio" "$KUBECONFIG_PATH"
-    restart_deployment_if_replicas "${CORE_SUPAVISOR_REPLICAS:-0}" "supavisor" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${CORE_VECTOR_REPLICAS:-0}" "vector" "$KUBECONFIG_PATH"
 
-    # Wait for Init containers and kubectl cp configs (db, kong, supavisor, vector, …).
+    # Wait for Init containers and kubectl cp configs (db, kong, vector, …).
     source ./kubectl_setup_core.sh
 else
     echo "Skipping core stack"
