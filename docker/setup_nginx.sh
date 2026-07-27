@@ -108,4 +108,19 @@ else
     export NGINX_BLOG_HTTP_CONFIG=""
 fi
 
+if [[ "${STACK_ARRAY[@]}" =~ "s3" ]]; then
+    : > ./volumes/nginx/conf.d/http/s3.conf
+    append_nginx_block_if_replicas "${S3_MINIO_REPLICAS:-0}" ./volumes/nginx/conf.d/http/s3-minio.conf.template ./volumes/nginx/conf.d/http/s3.conf
+
+    if [[ -s ./volumes/nginx/conf.d/http/s3.conf ]]; then
+        export NGINX_S3_HTTP_CONFIG="include /etc/nginx/conf.d/http/s3.conf;"
+    else
+        export NGINX_S3_HTTP_CONFIG=""
+        echo "No s3 HTTP nginx hosts enabled"
+    fi
+else
+    echo "Skipping nginx s3 config"
+    export NGINX_S3_HTTP_CONFIG=""
+fi
+
 envsubst < ./volumes/nginx/nginx.conf.template > ./volumes/nginx/nginx.conf
