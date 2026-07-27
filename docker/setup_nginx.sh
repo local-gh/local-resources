@@ -109,6 +109,12 @@ else
 fi
 
 if [[ "${STACK_ARRAY[@]}" =~ "s3" ]]; then
+    if [[ "${S3_MINIO_REPLICAS:-0}" -gt 0 ]]; then
+        if [[ -z "${NGINX_MINIO_HOST_URL:-}" || -z "${NGINX_MINIO_CONSOLE_HOST_URL:-}" ]]; then
+            echo "Error: NGINX_MINIO_HOST_URL and NGINX_MINIO_CONSOLE_HOST_URL are required when s3/minio is enabled"
+            exit 1
+        fi
+    fi
     : > ./volumes/nginx/conf.d/http/s3.conf
     append_nginx_block_if_replicas "${S3_MINIO_REPLICAS:-0}" ./volumes/nginx/conf.d/http/s3-minio.conf.template ./volumes/nginx/conf.d/http/s3.conf
 
