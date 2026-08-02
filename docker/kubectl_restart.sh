@@ -82,10 +82,7 @@ fi
 if [[ "${STACK_ARRAY[@]}" =~ "ai" ]]; then
     restart_deployment_if_replicas "${AI_ETCD_REPLICAS:-0}" "etcd" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${AI_OLLAMA_REPLICAS:-0}" "ollama" "$KUBECONFIG_PATH"
-    restart_deployment_if_replicas "${AI_OPEN_WEBUI_REPLICAS:-0}" "open-webui" "$KUBECONFIG_PATH"
-    restart_deployment_if_replicas "${AI_OPENEDAI_SPEECH_SERVER_REPLICAS:-0}" "openedai-speech-server" "$KUBECONFIG_PATH"
     restart_deployment_if_replicas "${AI_STANDALONE_REPLICAS:-0}" "standalone" "$KUBECONFIG_PATH"
-    source ./kubectl_setup_ai.sh
 else
     echo "Skipping ai stack"
 fi

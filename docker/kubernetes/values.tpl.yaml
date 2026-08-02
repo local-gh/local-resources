@@ -4,13 +4,6 @@ ai:
   ollama:
     replicas: $AI_OLLAMA_REPLICAS
     storage: $AI_OLLAMA_STORAGE
-  openWebui:
-    replicas: $AI_OPEN_WEBUI_REPLICAS
-    storage: $AI_OPEN_WEBUI_STORAGE
-  openedaiSpeechServer:
-    replicas: $AI_OPENEDAI_SPEECH_SERVER_REPLICAS
-    configStorage: $AI_OPENEDAI_SPEECH_SERVER_CONFIG_STORAGE
-    voicesStorage: $AI_OPENEDAI_SPEECH_SERVER_VOICES_STORAGE
   standalone:
     replicas: $AI_STANDALONE_REPLICAS
     storage: $AI_STANDALONE_STORAGE

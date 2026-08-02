@@ -1,9 +1,3 @@
-[submodule "open-webui"]
-	path = open-webui
-	url = https://github.com/fuoco-appdev/open-webui.git
-[submodule "openedai-speech"]
-	path = openedai-speech
-	url = https://github.com/matatonic/openedai-speech.git
 [submodule "logflare"]
 	path = logflare
 	url = https://github.com/fuoco-appdev/logflare.git

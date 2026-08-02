@@ -78,16 +78,7 @@ else
 fi
 
 if [[ "${STACK_ARRAY[@]}" =~ "ai" ]]; then
-    : > ./volumes/nginx/conf.d/http/ai.conf
-    append_nginx_block_if_replicas "${AI_OPEN_WEBUI_REPLICAS:-0}" ./volumes/nginx/conf.d/http/ai-open-webui.conf.template ./volumes/nginx/conf.d/http/ai.conf
-    append_nginx_block_if_replicas "${AI_OPENEDAI_SPEECH_SERVER_REPLICAS:-0}" ./volumes/nginx/conf.d/http/ai-openedai-speech.conf.template ./volumes/nginx/conf.d/http/ai.conf
-
-    if [[ -s ./volumes/nginx/conf.d/http/ai.conf ]]; then
-        export NGINX_AI_HTTP_CONFIG="include /etc/nginx/conf.d/http/ai.conf;"
-    else
-        export NGINX_AI_HTTP_CONFIG=""
-        echo "No ai HTTP nginx hosts enabled"
-    fi
+    export NGINX_AI_HTTP_CONFIG=""
 else
     echo "Skipping nginx ai config"
     export NGINX_AI_HTTP_CONFIG=""
