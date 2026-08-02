@@ -4,9 +4,6 @@
 [submodule "openedai-speech"]
 	path = openedai-speech
 	url = https://github.com/matatonic/openedai-speech.git
-[submodule "docker-swarm-visualizer"]
-	path = docker-swarm-visualizer
-	url = https://github.com/dockersamples/docker-swarm-visualizer.git
 [submodule "logflare"]
 	path = logflare
 	url = https://github.com/fuoco-appdev/logflare.git
