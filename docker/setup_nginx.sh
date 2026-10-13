@@ -78,16 +78,7 @@ else
 fi
 
 if [[ "${STACK_ARRAY[@]}" =~ "ai" ]]; then
-    : > ./volumes/nginx/conf.d/http/ai.conf
-    append_nginx_block_if_replicas "${AI_OPEN_WEBUI_REPLICAS:-0}" ./volumes/nginx/conf.d/http/ai-open-webui.conf.template ./volumes/nginx/conf.d/http/ai.conf
-    append_nginx_block_if_replicas "${AI_OPENEDAI_SPEECH_SERVER_REPLICAS:-0}" ./volumes/nginx/conf.d/http/ai-openedai-speech.conf.template ./volumes/nginx/conf.d/http/ai.conf
-
-    if [[ -s ./volumes/nginx/conf.d/http/ai.conf ]]; then
-        export NGINX_AI_HTTP_CONFIG="include /etc/nginx/conf.d/http/ai.conf;"
-    else
-        export NGINX_AI_HTTP_CONFIG=""
-        echo "No ai HTTP nginx hosts enabled"
-    fi
+    export NGINX_AI_HTTP_CONFIG=""
 else
     echo "Skipping nginx ai config"
     export NGINX_AI_HTTP_CONFIG=""
@@ -106,6 +97,27 @@ if [[ "${STACK_ARRAY[@]}" =~ "blog" ]]; then
 else
     echo "Skipping nginx blog config"
     export NGINX_BLOG_HTTP_CONFIG=""
+fi
+
+if [[ "${STACK_ARRAY[@]}" =~ "s3" ]]; then
+    if [[ "${S3_MINIO_REPLICAS:-0}" -gt 0 ]]; then
+        if [[ -z "${NGINX_MINIO_HOST_URL:-}" || -z "${NGINX_MINIO_CONSOLE_HOST_URL:-}" ]]; then
+            echo "Error: NGINX_MINIO_HOST_URL and NGINX_MINIO_CONSOLE_HOST_URL are required when s3/minio is enabled"
+            exit 1
+        fi
+    fi
+    : > ./volumes/nginx/conf.d/http/s3.conf
+    append_nginx_block_if_replicas "${S3_MINIO_REPLICAS:-0}" ./volumes/nginx/conf.d/http/s3-minio.conf.template ./volumes/nginx/conf.d/http/s3.conf
+
+    if [[ -s ./volumes/nginx/conf.d/http/s3.conf ]]; then
+        export NGINX_S3_HTTP_CONFIG="include /etc/nginx/conf.d/http/s3.conf;"
+    else
+        export NGINX_S3_HTTP_CONFIG=""
+        echo "No s3 HTTP nginx hosts enabled"
+    fi
+else
+    echo "Skipping nginx s3 config"
+    export NGINX_S3_HTTP_CONFIG=""
 fi
 
 envsubst < ./volumes/nginx/nginx.conf.template > ./volumes/nginx/nginx.conf

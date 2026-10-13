@@ -4,13 +4,6 @@ ai:
   ollama:
     replicas: $AI_OLLAMA_REPLICAS
     storage: $AI_OLLAMA_STORAGE
-  openWebui:
-    replicas: $AI_OPEN_WEBUI_REPLICAS
-    storage: $AI_OPEN_WEBUI_STORAGE
-  openedaiSpeechServer:
-    replicas: $AI_OPENEDAI_SPEECH_SERVER_REPLICAS
-    configStorage: $AI_OPENEDAI_SPEECH_SERVER_CONFIG_STORAGE
-    voicesStorage: $AI_OPENEDAI_SPEECH_SERVER_VOICES_STORAGE
   standalone:
     replicas: $AI_STANDALONE_REPLICAS
     storage: $AI_STANDALONE_STORAGE
@@ -55,9 +48,6 @@ core:
     storage: $CORE_STORAGE_STORAGE
   studio:
     replicas: $CORE_STUDIO_REPLICAS
-  supavisor:
-    replicas: $CORE_SUPAVISOR_REPLICAS
-    storage: $CORE_SUPAVISOR_STORAGE
   vector:
     replicas: $CORE_VECTOR_REPLICAS
     memoryRequest: $CORE_VECTOR_MEMORY_REQUEST

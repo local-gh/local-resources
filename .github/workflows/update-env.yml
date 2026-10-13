@@ -1,0 +1,111 @@
+# Updates a variable in docker/.env.enc and commits the change.
+#
+# Requires GitHub Environment "production" (or repo secrets):
+#   SOPS_AGE_KEY — age private key matching the recipient in docker/.env.enc
+#
+# The workflow decrypts .env.enc, updates the specified variable, re-encrypts, and commits.
+name: Update .env
+
+on:
+  workflow_dispatch:
+    inputs:
+      variable_name:
+        description: 'Variable name to update (e.g., STACKS)'
+        required: true
+        type: string
+      variable_value:
+        description: 'New value for the variable'
+        required: true
+        type: string
+      git_ref:
+        description: 'Branch to update (defaults to the branch selected when running the workflow)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  update-env:
+    name: Update .env.enc variable
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.git_ref || github.ref }}
+
+      - name: Install sops
+        run: |
+          SOPS_VERSION="3.13.1"
+          curl -fsSL "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64" -o /tmp/sops
+          sudo install -m 0755 /tmp/sops /usr/local/bin/sops
+
+      - name: Decrypt, update, and re-encrypt
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          VARIABLE_NAME: ${{ inputs.variable_name }}
+          VARIABLE_VALUE: ${{ inputs.variable_value }}
+        run: |
+          if [[ -z "${SOPS_AGE_KEY}" ]]; then
+            echo "SOPS_AGE_KEY secret is not set."
+            exit 1
+          fi
+          if [[ ! -f "${GITHUB_WORKSPACE}/docker/.env.enc" ]]; then
+            echo "Missing encrypted env file at docker/.env.enc."
+            exit 1
+          fi
+
+          # Decrypt .env.enc to .env
+          sops --decrypt --input-type dotenv --output-type dotenv \
+            "${GITHUB_WORKSPACE}/docker/.env.enc" > "${GITHUB_WORKSPACE}/docker/.env"
+
+          # Check if variable exists
+          if grep -q "^${VARIABLE_NAME}=" "${GITHUB_WORKSPACE}/docker/.env"; then
+            echo "Updating existing variable: ${VARIABLE_NAME}"
+            # Use a different delimiter for sed to handle values with special characters
+            sed -i "s|^${VARIABLE_NAME}=.*|${VARIABLE_NAME}=${VARIABLE_VALUE}|" "${GITHUB_WORKSPACE}/docker/.env"
+          else
+            echo "Adding new variable: ${VARIABLE_NAME}"
+            echo "${VARIABLE_NAME}=${VARIABLE_VALUE}" >> "${GITHUB_WORKSPACE}/docker/.env"
+          fi
+
+          # Show the updated value (masked for security)
+          echo "Updated ${VARIABLE_NAME} to: ${VARIABLE_VALUE}"
+
+          # Get the age recipient from the encrypted file
+          AGE_RECIPIENT=$(grep "sops_age__list_0__map_recipient=" "${GITHUB_WORKSPACE}/docker/.env.enc" | cut -d'=' -f2)
+          if [[ -z "${AGE_RECIPIENT}" ]]; then
+            echo "Could not extract age recipient from .env.enc"
+            exit 1
+          fi
+          echo "Using age recipient: ${AGE_RECIPIENT}"
+
+          # Re-encrypt .env to .env.enc
+          sops --encrypt --input-type dotenv --output-type dotenv \
+            --age "${AGE_RECIPIENT}" \
+            "${GITHUB_WORKSPACE}/docker/.env" > "${GITHUB_WORKSPACE}/docker/.env.enc.new"
+
+          # Replace old encrypted file
+          mv "${GITHUB_WORKSPACE}/docker/.env.enc.new" "${GITHUB_WORKSPACE}/docker/.env.enc"
+
+          # Clean up decrypted file
+          rm -f "${GITHUB_WORKSPACE}/docker/.env"
+
+          echo "Successfully updated and re-encrypted .env.enc"
+
+      - name: Commit and push
+        env:
+          VARIABLE_NAME: ${{ inputs.variable_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docker/.env.enc
+          git commit -m "Update ${VARIABLE_NAME} in .env.enc"
+          git push

@@ -75,6 +75,8 @@ source ./kubectl_setup_templates.sh
 # clusterrole and secret manifests below apply into — must run first.
 kubectl --kubeconfig="$KUBECONFIG_PATH" apply -f "https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml"
 
+source ./kubectl_cleanup_terminated_pods.sh
+kubectl_cleanup_terminated_pods
 source ./kubectl_apply_adminusers.sh
 source ./kubectl_apply_clusterroles.sh
 source ./kubectl_apply_daemonsets.sh
@@ -89,7 +91,8 @@ source ./setup_kong.sh
 source ./setup_nginx.sh
 source ./kubectl_setup_nginx.sh && kubectl_setup_nginx
 source ./kubectl_setup_core.sh
-source ./kubectl_setup_ai.sh
+
+kubectl_cleanup_terminated_pods
 
 # Detached from the console: MSYS2/Git Bash hangs at exit while a background
 # child holds the console handles, and callers of this script never see EOF.

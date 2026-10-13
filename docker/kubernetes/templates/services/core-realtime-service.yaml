@@ -6,7 +6,9 @@ metadata:
     kompose.version: 1.34.0 (cbf2835db)
   labels:
     service: realtime
-  name: realtime
+  # Name must be realtime-dev: Kong sets Host from the upstream URL, and
+  # Realtime resolves the self-hosted tenant from that Host (seeded as realtime-dev).
+  name: realtime-dev
 spec:
   type: ClusterIP
   ports:
