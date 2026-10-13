@@ -12,7 +12,11 @@ metadata:
 
     # Port 443 terminates TLS at DigitalOcean.
     service.beta.kubernetes.io/do-loadbalancer-tls-ports: "443"
-    service.beta.kubernetes.io/do-loadbalancer-certificate-name: {{ required "nginx.digitalocean.certificateName is required" .Values.nginx.digitalocean.certificateName | quote }}
+    # Omitted when certificateName is empty (local Docker Desktop has no DO
+    # certificate) — kubectl_setup_templates.sh warns and continues in that case.
+    {{- with .Values.nginx.digitalocean.certificateName }}
+    service.beta.kubernetes.io/do-loadbalancer-certificate-name: {{ . | quote }}
+    {{- end }}
 
     service.beta.kubernetes.io/do-loadbalancer-redirect-http-to-https: "true"
     service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"

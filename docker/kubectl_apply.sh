@@ -70,6 +70,11 @@ IFS=' ' read -ra STACK_ARRAY <<< "$STACKS"
 
 # Check if the directory exists, if not, create it
 source ./kubectl_setup_templates.sh
+
+# Creates the kubernetes-dashboard namespace that the dashboard adminuser,
+# clusterrole and secret manifests below apply into — must run first.
+kubectl --kubeconfig="$KUBECONFIG_PATH" apply -f "https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml"
+
 source ./kubectl_apply_adminusers.sh
 source ./kubectl_apply_clusterroles.sh
 source ./kubectl_apply_daemonsets.sh
@@ -86,8 +91,10 @@ source ./kubectl_setup_nginx.sh && kubectl_setup_nginx
 source ./kubectl_setup_core.sh
 source ./kubectl_setup_ai.sh
 
-kubectl --kubeconfig="$KUBECONFIG_PATH" apply -f "https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml"
-kubectl --kubeconfig="$KUBECONFIG_PATH" proxy &
+# Detached from the console: MSYS2/Git Bash hangs at exit while a background
+# child holds the console handles, and callers of this script never see EOF.
+kubectl --kubeconfig="$KUBECONFIG_PATH" proxy </dev/null >/dev/null 2>&1 &
+disown
 
 echo 'Dashboard token:'
 kubectl --kubeconfig="$KUBECONFIG_PATH" get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d

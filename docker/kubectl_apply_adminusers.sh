@@ -14,7 +14,7 @@ else
     echo "Directory ./kubernetes/release/adminusers already exists."
 fi
 
-kubectl --kubeconfig="$KUBECONFIG_PATH" apply -f kubernetes/release/dashboard-adminuser.yaml -n kubernetes-dashboard
+kubectl --kubeconfig="$KUBECONFIG_PATH" apply -f kubernetes/release/adminusers/dashboard-adminuser.yaml -n kubernetes-dashboard
 
 IFS=' ' read -ra STACK_ARRAY <<< "$STACKS"
 for stack in "${STACK_ARRAY[@]}"; do

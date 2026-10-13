@@ -36,7 +36,7 @@ spec:
             ls /tmp/etc/pooler
             until curl -fsSL -m 2 db:5432 > /dev/null 2>&1 || [ $? -eq 52 ]; do echo waiting for postgres; sleep 2; done;
             {{- if gt (int .Values.core.analytics.replicas) 0 }}
-            until curl -fsSL -m 2 analytics:4000; do echo waiting for analytics; sleep 2; done;
+            until curl -fsS -m 2 http://analytics:4000/health; do echo waiting for analytics; sleep 2; done;
             {{- end }}
         volumeMounts:
           - name: supavisor-volume

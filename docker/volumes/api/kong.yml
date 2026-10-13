@@ -8,10 +8,10 @@ consumers:
   - username: DASHBOARD
   - username: anon
     keyauth_credentials:
-      - key: "${SUPABASE_ANON_KEY}"
+      - key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzQ0ODI4MjAwLCJleHAiOjE5MDI1OTQ2MDB9.U4xPpsmkB9eb0SGSciPN6g0QgBFt3rkcceClGpPOXiU"
   - username: service_role
     keyauth_credentials:
-      - key: "${SUPABASE_SERVICE_KEY}"
+      - key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3NDQ4MjgyMDAsImV4cCI6MTkwMjU5NDYwMH0.4-oc48mxWvTp0MfLDzPU2UbZ1wUO7hzMudoBjIyAoZg"
 
 ###
 ### Access Control List
@@ -27,8 +27,8 @@ acls:
 ###
 basicauth_credentials:
   - consumer: DASHBOARD
-    username: "${DASHBOARD_USERNAME}"
-    password: "${DASHBOARD_PASSWORD}"
+    username: "admin"
+    password: "wb&C!cApmaNBET*M"
 
 ###
 ### API Routes
@@ -134,7 +134,7 @@ services:
   ## Secure Realtime routes
   - name: realtime-v1-ws
     _comment: 'Realtime: /realtime/v1/* -> ws://realtime:4000/socket/*'
-    url: http://realtime-dev.supabase-realtime:4000/socket
+    url: http://realtime:4000/socket
     protocol: ws
     routes:
       - name: realtime-v1-ws
@@ -154,7 +154,7 @@ services:
             - anon
   - name: realtime-v1-rest
     _comment: 'Realtime: /realtime/v1/* -> ws://realtime:4000/socket/*'
-    url: http://realtime-dev.supabase-realtime:4000/api
+    url: http://realtime:4000/api
     protocol: http
     routes:
       - name: realtime-v1-rest

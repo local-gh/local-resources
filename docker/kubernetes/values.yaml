@@ -24,6 +24,10 @@ blog:
 core:
   analytics:
     replicas: 1
+    memoryRequest: 2Gi
+    memoryLimit: 2Gi
+    erlAflags: +MMsco true +S 1:1 +MBas aoffcbf +MBlmbcs 512 +MEas aoffcbf +MElmbcs 512
+    logflareHost: log.local-app
   auth:
     replicas: 1
   db:
@@ -56,6 +60,8 @@ core:
     storage: 100Mi
   vector:
     replicas: 1
+    memoryRequest: 
+    memoryLimit: 
     storage: 100Mi
 dashboard:
   adminuser:
@@ -69,7 +75,7 @@ ecommerce:
     replicas: 1
     storage: 100Mi
   meilisearch:
-    replicas: 1
+    replicas: 
     dataStorage: 100Mi
   redis:
     replicas: 1
@@ -81,7 +87,7 @@ nginx:
   configStorage: 100Mi
   sslStorage: 100Mi
   digitalocean:
-    certificateId: 
+    certificateName: 
 nvidia:
 s3:
   minio:

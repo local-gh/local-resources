@@ -445,6 +445,11 @@ spec:
                 secretKeyRef:
                   name: env-secrets
                   key: SMTP_SENDER_NAME
+            - name: GOTRUE_MAILER_EXTERNAL_HOSTS
+              valueFrom:
+                secretKeyRef:
+                  name: env-secrets
+                  key: MAILER_EXTERNAL_HOSTS
             - name: GOTRUE_MAILER_SUBJECTS_INVITE
               valueFrom:
                 secretKeyRef:
