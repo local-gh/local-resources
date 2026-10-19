@@ -45,6 +45,6 @@ spec:
             - /bin/sh
             - -c
             - '/usr/bin/mc alias set supa-minio http://minio:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD && /usr/bin/mc mb --ignore-existing supa-minio/stub && echo "bucket stub ready" && while true; do sleep 3600; done'
-          image: minio/mc
+          image: quay.io/minio/mc:latest
           name: minio-createbucket
       restartPolicy: Always

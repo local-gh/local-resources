@@ -39,7 +39,7 @@ spec:
                 secretKeyRef:
                   name: env-secrets
                   key: MINIO_ROOT_PASSWORD
-          image: minio/minio
+          image: quay.io/minio/minio:latest
           livenessProbe:
             exec:
               command:
