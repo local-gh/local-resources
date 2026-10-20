@@ -44,7 +44,7 @@ spec:
           command:
             - /bin/sh
             - -c
-            - '/usr/bin/mc alias set supa-minio http://minio:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD && /usr/bin/mc mb --ignore-existing supa-minio/stub && echo "bucket stub ready" && while true; do sleep 3600; done'
-          image: quay.io/minio/mc:latest
+            - 'mc alias set supa-minio http://minio:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD && mc mb --ignore-existing supa-minio/stub && echo "bucket stub ready" && while true; do sleep 3600; done'
+          image: docker.io/bitnamilegacy/minio-client:2025.7.21-debian-12-r3
           name: minio-createbucket
       restartPolicy: Always

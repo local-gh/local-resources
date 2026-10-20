@@ -1,23 +1,22 @@
 services:
   minio:
-    image: quay.io/minio/minio:latest
+    image: docker.io/bitnamilegacy/minio:latest
     ports:
       - '9000:9000'
       - '9001:9001'
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    command: server --console-address ":9001" /data
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://minio:9000/minio/health/live" ]
       interval: 2s
       timeout: 10s
       retries: 5
     volumes:
-      - ./volumes/storage:/data:z
+      - ./volumes/storage:/bitnami/minio/data:z
 
   minio-createbucket:
-    image: quay.io/minio/mc:latest
+    image: docker.io/bitnamilegacy/minio-client:2025.7.21-debian-12-r3
     depends_on:
       minio:
         condition: service_healthy

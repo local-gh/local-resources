@@ -23,12 +23,7 @@ spec:
         service: minio
     spec:
       containers:
-        - args:
-            - server
-            - --console-address
-            - :9001
-            - /data
-          env:
+        - env:
             - name: MINIO_ROOT_USER
               valueFrom:
                 secretKeyRef:
@@ -39,13 +34,10 @@ spec:
                 secretKeyRef:
                   name: env-secrets
                   key: MINIO_ROOT_PASSWORD
-          image: quay.io/minio/minio:latest
+          image: docker.io/bitnamilegacy/minio:latest
           livenessProbe:
-            exec:
-              command:
-                - curl
-                - -f
-                - http://localhost:9000/minio/health/live
+            tcpSocket:
+              port: 9000
             failureThreshold: 5
             periodSeconds: 2
             timeoutSeconds: 10
@@ -56,7 +48,7 @@ spec:
             - containerPort: 9001
               protocol: TCP
           volumeMounts:
-            - mountPath: /data
+            - mountPath: /bitnami/minio/data
               name: minio-data-volume
               subPath: data
       restartPolicy: Always
