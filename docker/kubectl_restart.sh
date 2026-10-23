@@ -32,10 +32,16 @@ source ./setup_ssl.sh
 source ./setup_kong.sh
 source ./setup_nginx.sh
 
+RESTART_STATUS=0
 NGINX_DEPLOYMENT_NAME=$(kubectl --kubeconfig="$KUBECONFIG_PATH" get deployments --no-headers=true | grep "^nginx" | awk '{print $1}' | head -n 1)
 if [[ -n "$NGINX_DEPLOYMENT_NAME" ]]; then
     kubectl --kubeconfig="$KUBECONFIG_PATH" rollout restart deployment "$NGINX_DEPLOYMENT_NAME"
-    source ./kubectl_setup_nginx.sh && kubectl_setup_nginx
+    # Re-publishes the nginx ConfigMaps/Secret and waits for the restarted pod.
+    source ./kubectl_setup_nginx.sh
+    if ! kubectl_setup_nginx; then
+        echo "WARNING: nginx did not become ready; see pod diagnostics above."
+        RESTART_STATUS=1
+    fi
 fi
 
 if [[ "${STACK_ARRAY[@]}" =~ "core" ]]; then
@@ -99,4 +105,4 @@ if [ -z "${SKIP_DASHBOARD_PROXY:-}" ] && [ -z "${CI:-}" ]; then
     kubectl --kubeconfig="$KUBECONFIG_PATH" get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d
 fi
 
-exit 0
+exit "$RESTART_STATUS"

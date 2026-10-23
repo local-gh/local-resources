@@ -13,43 +13,50 @@ spec:
     metadata:
       labels:
         service: nginx-core
+      annotations:
+        # Substituted by envsubst at apply time (kubectl_setup_nginx.sh exports it)
+        # so a config change rolls the pod even though subPath mounts never refresh.
+        checksum/nginx-config: "${NGINX_CONFIG_HASH}"
     spec:
-      initContainers:
-      - name: init-nginx
-        image: nginx:latest
-        command:
-          - /bin/sh
-          - -c
-          - |
-            set -e
-            mkdir -p /tmp/etc/nginx/conf.d/http /tmp/etc/nginx/conf.d/stream
-            # Seed defaults, then remove config so we always wait for a fresh copy from the host.
-            cp -a /etc/nginx/. /tmp/etc/nginx/ 2>/dev/null || true
-            rm -f /tmp/etc/nginx/nginx.conf /tmp/etc/nginx/.htpasswd
-            mkdir -p /tmp/etc/nginx/conf.d/http /tmp/etc/nginx/conf.d/stream
-            echo "Waiting for nginx.conf and .htpasswd to be copied onto the volume..."
-            while [ ! -s /tmp/etc/nginx/nginx.conf ] || [ ! -s /tmp/etc/nginx/.htpasswd ]; do
-              sleep 5
-            done
-            echo "Nginx config received:"
-            ls -la /tmp/etc/nginx/nginx.conf /tmp/etc/nginx/.htpasswd
-            ls -la /tmp/etc/nginx/conf.d/http/ || true
-        volumeMounts:
-          - mountPath: /tmp/etc/nginx
-            name: nginx-volume
-            subPath: nginx
       containers:
       - name: nginx
         image: nginx:latest
-        volumeMounts:
-          - mountPath: /etc/nginx
-            name: nginx-volume
-            subPath: nginx
         ports:
           - containerPort: 80
           - containerPort: 443
+        # Only :80 servers exist when at least one stack is enabled, so this is
+        # a readiness (endpoint) gate rather than a liveness probe.
+        readinessProbe:
+          tcpSocket:
+            port: 80
+          periodSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+          - name: nginx-conf
+            mountPath: /etc/nginx/nginx.conf
+            subPath: nginx.conf
+            readOnly: true
+          - name: nginx-htpasswd
+            mountPath: /etc/nginx/.htpasswd
+            subPath: .htpasswd
+            readOnly: true
+          - name: nginx-conf-http
+            mountPath: /etc/nginx/conf.d/http
+            readOnly: true
+          - name: nginx-conf-stream
+            mountPath: /etc/nginx/conf.d/stream
+            readOnly: true
       restartPolicy: Always
       volumes:
-      - name: nginx-volume
-        persistentVolumeClaim:
-            claimName: nginx-volume-claim
+      - name: nginx-conf
+        configMap:
+          name: nginx-conf
+      - name: nginx-conf-http
+        configMap:
+          name: nginx-conf-http
+      - name: nginx-conf-stream
+        configMap:
+          name: nginx-conf-stream
+      - name: nginx-htpasswd
+        secret:
+          secretName: nginx-htpasswd

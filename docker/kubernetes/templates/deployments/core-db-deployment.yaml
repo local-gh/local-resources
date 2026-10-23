@@ -101,14 +101,26 @@ spec:
                   name: env-secrets
                   key: JWT_SECRET
           image: supabase/postgres:15.8.1.085
+          # Gives crash recovery after an unclean stop up to 5 minutes before
+          # liveness starts counting; the default 1s exec timeout was killing
+          # Postgres mid-recovery whenever the node was under pressure.
+          startupProbe:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - 'pg_isready -U postgres -h localhost -p 5432'
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
           readinessProbe:
             exec:
               command: 
               - /bin/sh
               - -c
               - 'pg_isready -U postgres -h localhost -p 5432'
-            initialDelaySeconds: 10
             periodSeconds: 10
+            timeoutSeconds: 5
             failureThreshold: 3
             successThreshold: 1
           lifecycle:
@@ -117,16 +129,17 @@ spec:
                 command:
                 - /bin/sh
                 - -c
-                - 'pg_ctl stop -m fast'
+                # The container runs as root; pg_ctl refuses to run as root.
+                - 'gosu postgres pg_ctl stop -m fast -D "${PGDATA:-/var/lib/postgresql/data}" || su -s /bin/sh postgres -c "pg_ctl stop -m fast -D ${PGDATA:-/var/lib/postgresql/data}"'
           livenessProbe:
             exec:
               command:
               - /bin/sh
               - -c
               - 'pg_isready -U postgres -h localhost -p 5432'
-            initialDelaySeconds: 30
             periodSeconds: 10
-            failureThreshold: 3
+            timeoutSeconds: 5
+            failureThreshold: 6
           name: supabase-db
           ports:
             - containerPort: 5432
@@ -147,6 +160,8 @@ spec:
               name: config-volume
               subPath: postgresql-custom
       restartPolicy: Always
+      # Room for the preStop fast shutdown to checkpoint instead of SIGKILL (137).
+      terminationGracePeriodSeconds: 60
       volumes:
         - name: ssl-volume
           persistentVolumeClaim:

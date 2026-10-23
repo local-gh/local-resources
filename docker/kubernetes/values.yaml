@@ -81,7 +81,6 @@ mail:
     storage: 
 nginx:
   replicas: 1
-  configStorage: 100Mi
   sslStorage: 100Mi
   digitalocean:
     certificateName: 

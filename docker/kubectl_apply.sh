@@ -81,6 +81,17 @@ source ./kubectl_apply_adminusers.sh
 source ./kubectl_apply_clusterroles.sh
 source ./kubectl_apply_daemonsets.sh
 source ./kubectl_apply_secrets.sh
+
+# nginx config must exist (and its checksum be exported) before the nginx
+# deployment is applied, since the pod mounts it directly.
+source ./setup_nginx.sh
+source ./kubectl_setup_nginx.sh
+SETUP_STATUS=0
+if ! kubectl_apply_nginx_config; then
+    echo "WARNING: nginx config could not be applied"
+    SETUP_STATUS=1
+fi
+
 source ./kubectl_apply_persistentvolumeclaims.sh
 source ./kubectl_apply_runtimeclasses.sh
 source ./kubectl_apply_deployments.sh
@@ -88,8 +99,10 @@ source ./kubectl_apply_networkpolicies.sh
 source ./kubectl_apply_services.sh
 
 source ./setup_kong.sh
-source ./setup_nginx.sh
-source ./kubectl_setup_nginx.sh && kubectl_setup_nginx
+if ! kubectl_setup_nginx; then
+    echo "WARNING: nginx did not become ready; see pod diagnostics above."
+    SETUP_STATUS=1
+fi
 source ./kubectl_setup_core.sh
 
 kubectl_cleanup_terminated_pods
@@ -102,4 +115,4 @@ disown
 echo 'Dashboard token:'
 kubectl --kubeconfig="$KUBECONFIG_PATH" get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d
 
-exit 0
+exit "$SETUP_STATUS"
