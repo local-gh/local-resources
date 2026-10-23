@@ -89,7 +89,12 @@ source ./kubectl_apply_services.sh
 
 source ./setup_kong.sh
 source ./setup_nginx.sh
-source ./kubectl_setup_nginx.sh && kubectl_setup_nginx
+SETUP_STATUS=0
+source ./kubectl_setup_nginx.sh
+if ! kubectl_setup_nginx; then
+    echo "WARNING: nginx config was not copied; the nginx pod will stay in Init until kubectl_setup_nginx is re-run."
+    SETUP_STATUS=1
+fi
 source ./kubectl_setup_core.sh
 
 kubectl_cleanup_terminated_pods
@@ -102,4 +107,4 @@ disown
 echo 'Dashboard token:'
 kubectl --kubeconfig="$KUBECONFIG_PATH" get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d
 
-exit 0
+exit "$SETUP_STATUS"

@@ -2,7 +2,10 @@ kubectl_setup_nginx() {
     IFS=' ' read -ra STACK_ARRAY <<< "$STACKS"
 
     local NAMESPACE="default"
-    local TIMEOUT=300
+    # Recreate rollouts can take well over 5 minutes when the previous pod sits
+    # on a NotReady node (NoExecute toleration is 300s) and the PVC then has to
+    # be detached from the old droplet before init-nginx can start.
+    local TIMEOUT="${NGINX_SETUP_TIMEOUT:-900}"
     local NGINX_POD_NAME=""
     local start_time
     start_time=$(date +%s)
@@ -93,7 +96,7 @@ kubectl_setup_nginx() {
     fi
 
     if [[ "${STACK_ARRAY[@]}" =~ "s3" ]]; then
-        kubectl --kubeconfig="$KUBECONFIG_PATH" cp ./volumes/nginx/conf.d/http/s3.conf "$NGINX_POD_NAME:/tmp/etc/nginx/conf.d/http/s3.conf" -c init-nginx
+        kubectl --kubeconfig="$KUBECONFIG_PATH" cp ./volumes/nginx/conf.d/http/s3.conf "$NGINX_POD_NAME:$target_root/conf.d/http/s3.conf" -c "$target_container"
     else
         echo "Skipping nginx s3 config"
     fi
