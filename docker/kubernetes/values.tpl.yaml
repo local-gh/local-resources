@@ -74,7 +74,6 @@ mail:
     storage: $MAIL_MAIL_STORAGE
 nginx:
   replicas: $NGINX_REPLICAS
-  configStorage: $NGINX_CONFIG_STORAGE
   sslStorage: $NGINX_SSL_STORAGE
   digitalocean:
     certificateName: $NGINX_DIGITALOCEAN_CERTIFICATE_NAME

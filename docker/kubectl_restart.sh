@@ -36,9 +36,10 @@ RESTART_STATUS=0
 NGINX_DEPLOYMENT_NAME=$(kubectl --kubeconfig="$KUBECONFIG_PATH" get deployments --no-headers=true | grep "^nginx" | awk '{print $1}' | head -n 1)
 if [[ -n "$NGINX_DEPLOYMENT_NAME" ]]; then
     kubectl --kubeconfig="$KUBECONFIG_PATH" rollout restart deployment "$NGINX_DEPLOYMENT_NAME"
+    # Re-publishes the nginx ConfigMaps/Secret and waits for the restarted pod.
     source ./kubectl_setup_nginx.sh
     if ! kubectl_setup_nginx; then
-        echo "WARNING: nginx config was not copied; the nginx pod will stay in Init until kubectl_setup_nginx is re-run."
+        echo "WARNING: nginx did not become ready; see pod diagnostics above."
         RESTART_STATUS=1
     fi
 fi
