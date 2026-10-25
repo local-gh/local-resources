@@ -97,6 +97,11 @@ spec:
                   name: env-secrets
                   key: MINIO_ROOT_PASSWORD
           image: supabase/storage-api:v1.32.0
+          resources:
+            requests:
+              memory: {{ .Values.core.storage.memoryRequest | default "128Mi" }}
+            limits:
+              memory: {{ .Values.core.storage.memoryLimit | default "512Mi" }}
           readinessProbe:
             exec:
               command:

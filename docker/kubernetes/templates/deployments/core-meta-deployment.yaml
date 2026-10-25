@@ -59,6 +59,11 @@ spec:
                   name: env-secrets
                   key: PG_META_CRYPTO_KEY
           image: supabase/postgres-meta:v0.93.1
+          resources:
+            requests:
+              memory: {{ .Values.core.meta.memoryRequest | default "96Mi" }}
+            limits:
+              memory: {{ .Values.core.meta.memoryLimit | default "384Mi" }}
           ports:
             - containerPort: 8080
           name: supabase-meta

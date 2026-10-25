@@ -23,8 +23,12 @@ core:
     logflareHost: $NGINX_LOGFLARE_HOST_URL
   auth:
     replicas: $CORE_AUTH_REPLICAS
+    memoryRequest: $CORE_AUTH_MEMORY_REQUEST
+    memoryLimit: $CORE_AUTH_MEMORY_LIMIT
   db:
     replicas: $CORE_DB_REPLICAS
+    memoryRequest: $CORE_DB_MEMORY_REQUEST
+    memoryLimit: $CORE_DB_MEMORY_LIMIT
     configStorage: $CORE_DB_CONFIG_STORAGE
     dataStorage: $CORE_DB_DATA_STORAGE
     initScriptsStorage: $CORE_DB_INIT_SCRIPTS_STORAGE
@@ -33,20 +37,34 @@ core:
     storage: $CORE_DB_STORAGE
   imgproxy:
     replicas: $CORE_IMGPROXY_REPLICAS
+    memoryRequest: $CORE_IMGPROXY_MEMORY_REQUEST
+    memoryLimit: $CORE_IMGPROXY_MEMORY_LIMIT
     storage: $CORE_IMGPROXY_STORAGE
   kong:
     replicas: $CORE_KONG_REPLICAS
+    memoryRequest: $CORE_KONG_MEMORY_REQUEST
+    memoryLimit: $CORE_KONG_MEMORY_LIMIT
   meta:
     replicas: $CORE_META_REPLICAS
+    memoryRequest: $CORE_META_MEMORY_REQUEST
+    memoryLimit: $CORE_META_MEMORY_LIMIT
   realtime:
     replicas: $CORE_REALTIME_REPLICAS
+    memoryRequest: $CORE_REALTIME_MEMORY_REQUEST
+    memoryLimit: $CORE_REALTIME_MEMORY_LIMIT
   rest:
     replicas: $CORE_REST_REPLICAS
+    memoryRequest: $CORE_REST_MEMORY_REQUEST
+    memoryLimit: $CORE_REST_MEMORY_LIMIT
   storage:
     replicas: $CORE_STORAGE_REPLICAS
+    memoryRequest: $CORE_STORAGE_MEMORY_REQUEST
+    memoryLimit: $CORE_STORAGE_MEMORY_LIMIT
     storage: $CORE_STORAGE_STORAGE
   studio:
     replicas: $CORE_STUDIO_REPLICAS
+    memoryRequest: $CORE_STUDIO_MEMORY_REQUEST
+    memoryLimit: $CORE_STUDIO_MEMORY_LIMIT
   vector:
     replicas: $CORE_VECTOR_REPLICAS
     memoryRequest: $CORE_VECTOR_MEMORY_REQUEST
@@ -62,17 +80,23 @@ development:
 ecommerce:
   medusaServer:
     replicas: $ECOMMERCE_MEDUSA_SERVER_REPLICAS
+    memoryRequest: $ECOMMERCE_MEDUSA_SERVER_MEMORY_REQUEST
+    memoryLimit: $ECOMMERCE_MEDUSA_SERVER_MEMORY_LIMIT
     storage: $ECOMMERCE_MEDUSA_SERVER_STORAGE
   meilisearch:
     replicas: $ECOMMERCE_MEILISEARCH_REPLICAS
     dataStorage: $ECOMMERCE_MEILISEARCH_DATA_STORAGE
   redis:
     replicas: $ECOMMERCE_REDIS_REPLICAS
+    memoryRequest: $ECOMMERCE_REDIS_MEMORY_REQUEST
+    memoryLimit: $ECOMMERCE_REDIS_MEMORY_LIMIT
 mail:
   mail:
     storage: $MAIL_MAIL_STORAGE
 nginx:
   replicas: $NGINX_REPLICAS
+  memoryRequest: $NGINX_MEMORY_REQUEST
+  memoryLimit: $NGINX_MEMORY_LIMIT
   sslStorage: $NGINX_SSL_STORAGE
   digitalocean:
     certificateName: $NGINX_DIGITALOCEAN_CERTIFICATE_NAME
@@ -80,4 +104,9 @@ nvidia:
 s3:
   minio:
     replicas: $S3_MINIO_REPLICAS
+    memoryRequest: $S3_MINIO_MEMORY_REQUEST
+    memoryLimit: $S3_MINIO_MEMORY_LIMIT
+  minioCreatebucket:
+    memoryRequest: $S3_MINIO_CREATEBUCKET_MEMORY_REQUEST
+    memoryLimit: $S3_MINIO_CREATEBUCKET_MEMORY_LIMIT
     storage: $S3_MINIO_DATA_STORAGE

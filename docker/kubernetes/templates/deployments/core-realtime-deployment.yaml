@@ -78,6 +78,11 @@ spec:
                   name: env-secrets
                   key: SECRET_KEY_BASE
           image: supabase/realtime:v2.57.2
+          resources:
+            requests:
+              memory: {{ .Values.core.realtime.memoryRequest | default "192Mi" }}
+            limits:
+              memory: {{ .Values.core.realtime.memoryLimit | default "768Mi" }}
           startupProbe:
             tcpSocket:
               port: 4000

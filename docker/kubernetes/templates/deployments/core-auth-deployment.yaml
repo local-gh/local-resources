@@ -501,6 +501,11 @@ spec:
                   name: env-secrets
                   key: ENABLE_PHONE_AUTOCONFIRM
           image: supabase/gotrue:v2.180.0
+          resources:
+            requests:
+              memory: {{ .Values.core.auth.memoryRequest | default "64Mi" }}
+            limits:
+              memory: {{ .Values.core.auth.memoryLimit | default "256Mi" }}
           readinessProbe:
             exec:
               command:

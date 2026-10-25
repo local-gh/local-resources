@@ -110,6 +110,11 @@ spec:
                   key: LOGFLARE_PRIVATE_ACCESS_TOKEN
             {{- end }}
           image: supabase/studio:2025.11.26-sha-8f096b5
+          resources:
+            requests:
+              memory: {{ .Values.core.studio.memoryRequest | default "256Mi" }}
+            limits:
+              memory: {{ .Values.core.studio.memoryLimit | default "1Gi" }}
           livenessProbe:
             exec:
               command:
