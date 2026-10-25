@@ -28,6 +28,11 @@ spec:
             - -c
             - redis-server
           image: redis
+          resources:
+            requests:
+              memory: {{ .Values.ecommerce.redis.memoryRequest | default "32Mi" }}
+            limits:
+              memory: {{ .Values.ecommerce.redis.memoryLimit | default "256Mi" }}
           livenessProbe:
             exec:
               command:

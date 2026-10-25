@@ -30,8 +30,12 @@ core:
     logflareHost: log.local-app
   auth:
     replicas: 1
+    memoryRequest: 
+    memoryLimit: 
   db:
     replicas: 1
+    memoryRequest: 
+    memoryLimit: 
     configStorage: 100Mi
     dataStorage: 10Gi
     initScriptsStorage: 100Mi
@@ -40,20 +44,34 @@ core:
     storage: 100Mi
   imgproxy:
     replicas: 1
+    memoryRequest: 
+    memoryLimit: 
     storage: 100Mi
   kong:
     replicas: 1
+    memoryRequest: 
+    memoryLimit: 
   meta:
     replicas: 1
+    memoryRequest: 
+    memoryLimit: 
   realtime:
     replicas: 1
+    memoryRequest: 
+    memoryLimit: 
   rest:
     replicas: 1
+    memoryRequest: 
+    memoryLimit: 
   storage:
     replicas: 1
+    memoryRequest: 
+    memoryLimit: 
     storage: 100Mi
   studio:
     replicas: 1
+    memoryRequest: 
+    memoryLimit: 
   vector:
     replicas: 1
     memoryRequest: 
@@ -69,17 +87,23 @@ development:
 ecommerce:
   medusaServer:
     replicas: 1
+    memoryRequest: 
+    memoryLimit: 
     storage: 100Mi
   meilisearch:
     replicas: 
     dataStorage: 100Mi
   redis:
     replicas: 1
+    memoryRequest: 
+    memoryLimit: 
 mail:
   mail:
     storage: 
 nginx:
   replicas: 1
+  memoryRequest: 
+  memoryLimit: 
   sslStorage: 100Mi
   digitalocean:
     certificateName: 
@@ -87,4 +111,9 @@ nvidia:
 s3:
   minio:
     replicas: 1
+    memoryRequest: 
+    memoryLimit: 
+  minioCreatebucket:
+    memoryRequest: 
+    memoryLimit: 
     storage: 10Gi

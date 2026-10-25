@@ -218,6 +218,11 @@ spec:
                 name: env-secrets
                 key: STRIPE_WEBHOOK_SECRET
           image: fuocoappdev/medusa-server:latest
+          resources:
+            requests:
+              memory: {{ .Values.ecommerce.medusaServer.memoryRequest | default "384Mi" }}
+            limits:
+              memory: {{ .Values.ecommerce.medusaServer.memoryLimit | default "1Gi" }}
           imagePullPolicy: Always
           name: medusa-server
           imagePullPolicy: Always

@@ -64,6 +64,11 @@ spec:
                   name: env-secrets
                   key: DASHBOARD_PASSWORD
           image: kong:2.8.1
+          resources:
+            requests:
+              memory: {{ .Values.core.kong.memoryRequest | default "128Mi" }}
+            limits:
+              memory: {{ .Values.core.kong.memoryLimit | default "512Mi" }}
           name: supabase-kong
           ports:
             - containerPort: 8000

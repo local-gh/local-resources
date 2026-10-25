@@ -112,6 +112,11 @@ spec:
                   name: env-secrets
                   key: JWT_SECRET
           image: supabase/postgres:15.8.1.085
+          resources:
+            requests:
+              memory: {{ .Values.core.db.memoryRequest | default "512Mi" }}
+            limits:
+              memory: {{ .Values.core.db.memoryLimit | default "2Gi" }}
           # Gives crash recovery after an unclean stop up to 5 minutes before
           # liveness starts counting; the default 1s exec timeout was killing
           # Postgres mid-recovery whenever the node was under pressure.
