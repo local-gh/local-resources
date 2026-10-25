@@ -26,14 +26,16 @@ spec:
           - /bin/sh
           - -c
           - |
+            set -e
             mkdir -p /tmp/docker-entrypoint-initdb.d/migrations
             mkdir -p /tmp/docker-entrypoint-initdb.d/init-scripts
-            rm -r /tmp/docker-entrypoint-initdb.d/migrations/*
-            rm -r /tmp/docker-entrypoint-initdb.d/init-scripts/*
-            while [ ! -e /tmp/docker-entrypoint-initdb.d/migrations/99-logs.sql ] || [ ! -s /tmp/docker-entrypoint-initdb.d/migrations/99-logs.sql ]; do
-              echo 'Waiting for all copied files...'
-              sleep 10
-            done
+            rm -rf /tmp/docker-entrypoint-initdb.d/migrations/* /tmp/docker-entrypoint-initdb.d/init-scripts/*
+            # Host-provided SQL and SSL material come from mounted ConfigMaps/Secret
+            # (kubectl_apply_core_config.sh); image defaults are layered on top below.
+            cp -L /tmp/config/migrations/*.sql /tmp/docker-entrypoint-initdb.d/migrations/
+            cp -L /tmp/config/init-scripts/*.sql /tmp/docker-entrypoint-initdb.d/init-scripts/
+            mkdir -p /tmp/var/lib/ssl
+            cp -L /tmp/config/ssl/server.crt /tmp/config/ssl/server.key /tmp/var/lib/ssl/
             ls /etc/postgresql-custom
             cp -r /etc/postgresql-custom/* /tmp/etc/postgresql-custom
             ls /docker-entrypoint-initdb.d/init-scripts
@@ -61,6 +63,15 @@ spec:
           - name: config-volume
             mountPath: /tmp/etc/postgresql-custom
             subPath: postgresql-custom
+          - name: db-migrations
+            mountPath: /tmp/config/migrations
+            readOnly: true
+          - name: db-init-scripts
+            mountPath: /tmp/config/init-scripts
+            readOnly: true
+          - name: db-ssl
+            mountPath: /tmp/config/ssl
+            readOnly: true
       containers:
         - args:
             - postgres
@@ -178,3 +189,12 @@ spec:
         - name: config-volume
           persistentVolumeClaim:
             claimName: db-config-volume-claim
+        - name: db-migrations
+          configMap:
+            name: db-migrations
+        - name: db-init-scripts
+          configMap:
+            name: db-init-scripts
+        - name: db-ssl
+          secret:
+            secretName: db-ssl

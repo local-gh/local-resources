@@ -85,10 +85,16 @@ source ./kubectl_apply_secrets.sh
 # nginx config must exist (and its checksum be exported) before the nginx
 # deployment is applied, since the pod mounts it directly.
 source ./setup_nginx.sh
+source ./setup_kong.sh
 source ./kubectl_setup_nginx.sh
+source ./kubectl_apply_core_config.sh
 SETUP_STATUS=0
 if ! kubectl_apply_nginx_config; then
     echo "WARNING: nginx config could not be applied"
+    SETUP_STATUS=1
+fi
+if ! kubectl_apply_core_config; then
+    echo "WARNING: db/kong config could not be applied"
     SETUP_STATUS=1
 fi
 
@@ -98,7 +104,6 @@ source ./kubectl_apply_deployments.sh
 source ./kubectl_apply_networkpolicies.sh
 source ./kubectl_apply_services.sh
 
-source ./setup_kong.sh
 if ! kubectl_setup_nginx; then
     echo "WARNING: nginx did not become ready; see pod diagnostics above."
     SETUP_STATUS=1
