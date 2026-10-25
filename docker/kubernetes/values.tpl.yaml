@@ -36,7 +36,6 @@ core:
     storage: $CORE_IMGPROXY_STORAGE
   kong:
     replicas: $CORE_KONG_REPLICAS
-    storage: $CORE_KONG_STORAGE
   meta:
     replicas: $CORE_META_REPLICAS
   realtime:

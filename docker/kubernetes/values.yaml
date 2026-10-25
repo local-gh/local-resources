@@ -43,7 +43,6 @@ core:
     storage: 100Mi
   kong:
     replicas: 1
-    storage: 100Mi
   meta:
     replicas: 1
   realtime:

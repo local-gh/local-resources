@@ -32,7 +32,19 @@ source ./setup_ssl.sh
 source ./setup_kong.sh
 source ./setup_nginx.sh
 
+# Pods stuck Terminating on an unreachable node hold their RWO volumes, which
+# leaves the restarted db Pending (Multi-Attach) and everything else in Init.
+source ./kubectl_cleanup_terminated_pods.sh
+kubectl_cleanup_terminated_pods
+
 RESTART_STATUS=0
+
+# Publish db/kong config before rolling pods so the new ones mount current values.
+source ./kubectl_apply_core_config.sh
+if ! kubectl_apply_core_config; then
+    echo "WARNING: db/kong config could not be applied"
+    RESTART_STATUS=1
+fi
 NGINX_DEPLOYMENT_NAME=$(kubectl --kubeconfig="$KUBECONFIG_PATH" get deployments --no-headers=true | grep "^nginx" | awk '{print $1}' | head -n 1)
 if [[ -n "$NGINX_DEPLOYMENT_NAME" ]]; then
     kubectl --kubeconfig="$KUBECONFIG_PATH" rollout restart deployment "$NGINX_DEPLOYMENT_NAME"
