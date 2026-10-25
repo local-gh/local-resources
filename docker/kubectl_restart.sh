@@ -32,6 +32,11 @@ source ./setup_ssl.sh
 source ./setup_kong.sh
 source ./setup_nginx.sh
 
+# Pods stuck Terminating on an unreachable node hold their RWO volumes, which
+# leaves the restarted db Pending (Multi-Attach) and everything else in Init.
+source ./kubectl_cleanup_terminated_pods.sh
+kubectl_cleanup_terminated_pods
+
 RESTART_STATUS=0
 NGINX_DEPLOYMENT_NAME=$(kubectl --kubeconfig="$KUBECONFIG_PATH" get deployments --no-headers=true | grep "^nginx" | awk '{print $1}' | head -n 1)
 if [[ -n "$NGINX_DEPLOYMENT_NAME" ]]; then
