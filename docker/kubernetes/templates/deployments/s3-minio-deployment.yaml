@@ -51,6 +51,11 @@ spec:
                   name: env-secrets
                   key: MINIO_ROOT_PASSWORD
           image: docker.io/bitnamilegacy/minio:latest
+          resources:
+            requests:
+              memory: {{ .Values.s3.minio.memoryRequest | default "128Mi" }}
+            limits:
+              memory: {{ .Values.s3.minio.memoryLimit | default "512Mi" }}
           livenessProbe:
             tcpSocket:
               port: 9000

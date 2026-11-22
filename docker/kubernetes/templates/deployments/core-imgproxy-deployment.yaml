@@ -40,6 +40,11 @@ spec:
                   name: env-secrets
                   key: IMGPROXY_ENABLE_WEBP_DETECTION
           image: darthsim/imgproxy:v3.8.0
+          resources:
+            requests:
+              memory: {{ .Values.core.imgproxy.memoryRequest | default "64Mi" }}
+            limits:
+              memory: {{ .Values.core.imgproxy.memoryLimit | default "512Mi" }}
           livenessProbe:
             exec:
               command:

@@ -48,7 +48,6 @@ render_manifest() {
 
 render_manifest "templates/services/nginx-service.yaml" kubernetes/release/services/nginx-service.yaml
 render_manifest "templates/deployments/nginx-deployment.yaml" kubernetes/release/deployments/nginx-deployment.yaml
-render_manifest "templates/persistentvolumeclaims/nginx-persistentvolumeclaim.yaml" kubernetes/release/persistentvolumeclaims/nginx-persistentvolumeclaim.yaml
 render_manifest "templates/persistentvolumeclaims/nginx-ssl-persistentvolumeclaim.yaml" kubernetes/release/persistentvolumeclaims/nginx-ssl-persistentvolumeclaim.yaml
 render_manifest "templates/daemonsets/nvidia-device-plugin-daemonset.yaml" kubernetes/release/daemonsets/nvidia-device-plugin-daemonset.yaml
 render_manifest "templates/adminusers/dashboard-adminuser.yaml" kubernetes/release/adminusers/dashboard-adminuser.yaml

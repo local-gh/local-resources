@@ -61,6 +61,11 @@ spec:
                   name: env-secrets
                   key: PGRST_APP_SETTINGS_JWT_SECRET
           image: postgrest/postgrest:v13.0.7
+          resources:
+            requests:
+              memory: {{ .Values.core.rest.memoryRequest | default "64Mi" }}
+            limits:
+              memory: {{ .Values.core.rest.memoryLimit | default "256Mi" }}
           name: supabase-rest
           ports:
             - containerPort: 3000

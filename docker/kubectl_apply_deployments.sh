@@ -15,7 +15,8 @@ else
     echo "Directory ./kubernetes/release/deployments already exists."
 fi
 
-kubectl --kubeconfig="$KUBECONFIG_PATH" apply -f kubernetes/release/deployments/nginx-deployment.yaml
+# envsubst fills checksum/nginx-config from NGINX_CONFIG_HASH (kubectl_setup_nginx.sh).
+envsubst < kubernetes/release/deployments/nginx-deployment.yaml | kubectl --kubeconfig="$KUBECONFIG_PATH" apply -f -
 
 IFS=' ' read -ra STACK_ARRAY <<< "$STACKS"
 for stack in "${STACK_ARRAY[@]}"; do

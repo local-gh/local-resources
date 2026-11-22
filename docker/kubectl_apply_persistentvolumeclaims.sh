@@ -14,7 +14,6 @@ else
     echo "Directory ./kubernetes/release/persistentvolumeclaims already exists."
 fi
 
-kubectl --kubeconfig="$KUBECONFIG_PATH" apply -f kubernetes/release/persistentvolumeclaims/nginx-persistentvolumeclaim.yaml
 kubectl --kubeconfig="$KUBECONFIG_PATH" apply -f kubernetes/release/persistentvolumeclaims/nginx-ssl-persistentvolumeclaim.yaml
 
 IFS=' ' read -ra STACK_ARRAY <<< "$STACKS"
