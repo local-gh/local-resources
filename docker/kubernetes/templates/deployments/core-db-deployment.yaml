@@ -24,27 +24,24 @@ spec:
         image: supabase/postgres:15.8.1.085
         command:
           - /bin/sh
-          - -c
+          - -ec
           - |
-            mkdir -p /tmp/docker-entrypoint-initdb.d/migrations
-            mkdir -p /tmp/docker-entrypoint-initdb.d/init-scripts
-            rm -r /tmp/docker-entrypoint-initdb.d/migrations/*
-            rm -r /tmp/docker-entrypoint-initdb.d/init-scripts/*
-            while [ ! -e /tmp/docker-entrypoint-initdb.d/migrations/99-logs.sql ] || [ ! -s /tmp/docker-entrypoint-initdb.d/migrations/99-logs.sql ]; do
-              echo 'Waiting for all copied files...'
-              sleep 10
-            done
-            ls /etc/postgresql-custom
-            cp -r /etc/postgresql-custom/* /tmp/etc/postgresql-custom
-            ls /docker-entrypoint-initdb.d/init-scripts
-            cp -r /docker-entrypoint-initdb.d/init-scripts/* /tmp/docker-entrypoint-initdb.d/init-scripts/
-            ls /docker-entrypoint-initdb.d/migrations
-            cp -r /docker-entrypoint-initdb.d/migrations/* /tmp/docker-entrypoint-initdb.d/migrations/
-            # Postgres runs as postgres and must own SSL material (kubectl cp leaves root:root).
+            echo "Preparing PostgreSQL configuration..."
+
+            test -s /tmp/docker-entrypoint-initdb.d/migrations/99-logs.sql
+
+            mkdir -p /tmp/etc/postgresql-custom
+
+            cp -r /etc/postgresql-custom/. /tmp/etc/postgresql-custom/
+
             chown -R postgres:postgres /tmp/var/lib/ssl
             chmod 644 /tmp/var/lib/ssl/server.crt
             chmod 600 /tmp/var/lib/ssl/server.key
-            chmod -R 700 /tmp/etc/postgresql-custom && chown -R postgres:postgres /tmp/etc/postgresql-custom
+
+            chmod -R 700 /tmp/etc/postgresql-custom
+            chown -R postgres:postgres /tmp/etc/postgresql-custom
+
+            echo "PostgreSQL initialization preparation completed."
         volumeMounts:
           - name: ssl-volume
             mountPath: /tmp/var/lib/ssl
