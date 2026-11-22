@@ -26,22 +26,57 @@ spec:
           - /bin/sh
           - -ec
           - |
-            echo "Preparing PostgreSQL configuration..."
+            echo "Preparing PostgreSQL..."
 
-            test -s /tmp/docker-entrypoint-initdb.d/migrations/99-logs.sql
+            mkdir -p \
+              /tmp/docker-entrypoint-initdb.d/migrations \
+              /tmp/docker-entrypoint-initdb.d/init-scripts \
+              /tmp/etc/postgresql-custom \
+              /tmp/var/lib/ssl
 
-            mkdir -p /tmp/etc/postgresql-custom
+            echo "Copying migrations..."
+            if [ -d /tmp/config/migrations ]; then
+              cp -L /tmp/config/migrations/. \
+                /tmp/docker-entrypoint-initdb.d/migrations/
+            fi
 
-            cp -r /etc/postgresql-custom/. /tmp/etc/postgresql-custom/
+            echo "Copying init scripts..."
+            if [ -d /tmp/config/init-scripts ]; then
+              cp -L /tmp/config/init-scripts/. \
+                /tmp/docker-entrypoint-initdb.d/init-scripts/
+            fi
+
+            echo "Copying image defaults..."
+            if [ -d /docker-entrypoint-initdb.d/migrations ]; then
+              cp -r /docker-entrypoint-initdb.d/migrations/. \
+                /tmp/docker-entrypoint-initdb.d/migrations/
+            fi
+
+            if [ -d /docker-entrypoint-initdb.d/init-scripts ]; then
+              cp -r /docker-entrypoint-initdb.d/init-scripts/. \
+                /tmp/docker-entrypoint-initdb.d/init-scripts/
+            fi
+
+            echo "Copying PostgreSQL configuration..."
+            if [ -d /etc/postgresql-custom ]; then
+              cp -r /etc/postgresql-custom/. \
+                /tmp/etc/postgresql-custom/
+            fi
+
+            echo "Preparing SSL..."
+            cp -L /tmp/config/ssl/server.crt \
+              /tmp/var/lib/ssl/server.crt
+            cp -L /tmp/config/ssl/server.key \
+              /tmp/var/lib/ssl/server.key
 
             chown -R postgres:postgres /tmp/var/lib/ssl
             chmod 644 /tmp/var/lib/ssl/server.crt
             chmod 600 /tmp/var/lib/ssl/server.key
 
-            chmod -R 700 /tmp/etc/postgresql-custom
             chown -R postgres:postgres /tmp/etc/postgresql-custom
+            chmod -R 700 /tmp/etc/postgresql-custom
 
-            echo "PostgreSQL initialization preparation completed."
+            echo "PostgreSQL preparation completed."
         volumeMounts:
           - name: ssl-volume
             mountPath: /tmp/var/lib/ssl
